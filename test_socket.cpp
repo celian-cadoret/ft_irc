@@ -17,13 +17,13 @@ int main(int argc, char **argv) {
     // Création du socket
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd == 0) {
-        perror("Socket failed");
+        std::cerr << "Socket failed" << std::endl;
         exit(EXIT_FAILURE);
     }
 
     // Attache le socket au port 8080
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
-        perror("Setsockopt error");
+        std::cerr << "Setsockopt error" << std::endl;
         close(server_fd);
         exit(EXIT_FAILURE);
     }
@@ -33,14 +33,14 @@ int main(int argc, char **argv) {
 
     // Associe le socket à l'adresse et au port
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
-        perror("Bind failed");
+        std::cerr << "Bind failed" << std::endl;
         close(server_fd);
         exit(EXIT_FAILURE);
     }
 
     // Met le socket en écoute
     if (listen(server_fd, 3) < 0) {
-        perror("Listen failed");
+        std::cerr << "Listen failed" << std::endl;
         close(server_fd);
         exit(EXIT_FAILURE);
     }
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     // Accepte une connexion
     new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
     if (new_socket < 0) {
-        perror("Accept error");
+        std::cerr << "Accept error" << std::endl;
         close(server_fd);
         exit(EXIT_FAILURE);
     }
@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
 		std::getline(std::cin, input);
 		if (input == "exit")
 			break;
-		input = input + "\n";
+		input = "server " + input + "\n";
 		send(new_socket, input.c_str(), input.length(), 0);
 		std::cout << "Message envoyé : " << input;
 	}
