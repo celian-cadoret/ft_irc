@@ -82,11 +82,12 @@ void Server::connectUser() {
 	int addrlen = sizeof(_address);
 
 	// Accept a connection
-	new_socket = accept(_server_fd, (struct sockaddr *)&_server_fd, (socklen_t*)&addrlen);
+	new_socket = accept(_server_fd, (struct sockaddr *)&_address, (socklen_t*)&addrlen);
 	if (new_socket < 0) {
 		std::cerr << "Listen failed" << std::endl;
 		close(_server_fd);
 		exit(1);
 	}
 	_user.push_back(User(new_socket, "michel", "michou"));
+	std::cout << "Connected client " << _user.size() << std::endl;
 }

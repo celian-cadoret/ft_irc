@@ -13,12 +13,6 @@ int main( int ac, char **av ) {
 
 	server.connectUser();
 
-	std::cout << "Connected client 1" << std::endl;
-
-	//server.connectUser();
-
-	//std::cout << "Connected client 2" << std::endl;
-
 	std::string input;
 	while (true) {
 		std::getline(std::cin, input);
@@ -28,7 +22,7 @@ int main( int ac, char **av ) {
 		for (int i = 0; i < server.getUserAmt(); i++) {
 			send(server.getUser(i).getUserFd(), input.c_str(), input.length(), 0); // Must use poll
 		}
-	}		
+	}
 
 	for (int i = 0; i < server.getUserAmt(); i++) {
 		close(server.getUser(i).getUserFd());
