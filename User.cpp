@@ -10,11 +10,9 @@ User::~User() {}
 
 
 User &User::operator=( User const &src ) {
-	if (this != &src) {
-		_username = src._username;
-		_nickname = src._nickname;
-		_user_fd = src._user_fd;
-	}
+	_username = src._username;
+	_nickname = src._nickname;
+	_user_fd = src._user_fd;
 	return *this;
 }
 

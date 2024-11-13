@@ -10,11 +10,9 @@ Server::~Server() {}
 
 
 Server &Server::operator=( Server const &src ) {
-	if (this != &src) {
-		_port = src._port;
-		_password = src._password;
-		_server_fd = src._server_fd;
-	}
+	_port = src._port;
+	_password = src._password;
+	_server_fd = src._server_fd;
 	return *this;
 }
 
@@ -33,6 +31,10 @@ int &Server::getSocket() {
 
 struct sockaddr_in &Server::getAddress() {
 	return _address;
+}
+
+User &Server::getUser() {
+	return _user;
 }
 
 
@@ -73,4 +75,18 @@ void Server::start() {
 
 void	Server::addUser(User &user) {
 	_user = user;
+}
+
+void Server::connectUser() {
+	int new_socket;
+	int addrlen = sizeof(_address);
+
+	// Accept a connection
+	new_socket = accept(_server_fd, (struct sockaddr *)&_server_fd, (socklen_t*)&addrlen);
+	if (new_socket < 0) {
+		std::cerr << "Listen failed" << std::endl;
+		close(_server_fd);
+		exit(1);
+	}
+	_user = User(new_socket, "michel", "michou");
 }

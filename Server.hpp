@@ -2,6 +2,8 @@
 
 #include "main.hpp"
 
+class User;
+
 class Server {
 	private:
 		int _port;
@@ -24,7 +26,8 @@ class Server {
 		int &getSocket();
 		struct sockaddr_in &getAddress();
 		void	addUser(User &user);
-		void	connectUser();
+		User &getUser();
 
 		void start();
+		void	connectUser();
 };
