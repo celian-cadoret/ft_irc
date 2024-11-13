@@ -26,11 +26,13 @@ int main( int ac, char **av ) {
 			break;
 		input = "server " + input + "\n";
 		for (int i = 0; i < server.getUserAmt(); i++) {
-			send(server.getUser(0).getUserFd(), input.c_str(), input.length(), 0); // Must use poll
+			send(server.getUser(i).getUserFd(), input.c_str(), input.length(), 0); // Must use poll
 		}
 	}		
 
-	close(server.getUser(0).getUserFd());
+	for (int i = 0; i < server.getUserAmt(); i++) {
+		close(server.getUser(i).getUserFd());
+	}
 	close(server.getSocket());
 	return 0;
 }
