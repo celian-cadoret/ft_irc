@@ -70,3 +70,7 @@ void Server::start() {
 		exit(1);
 	}
 }
+
+void	Server::addUser(User &user) {
+	_user = user;
+}

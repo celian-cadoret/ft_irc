@@ -9,7 +9,7 @@ class Server {
 		int _server_fd;
 		struct sockaddr_in _address;
 
-		//User _user;
+		User _user;
 	
 	public:
 		Server();
@@ -23,6 +23,8 @@ class Server {
 		std::string getPassword();
 		int &getSocket();
 		struct sockaddr_in &getAddress();
+		void	addUser(User &user);
+		void	connectUser();
 
 		void start();
 };
