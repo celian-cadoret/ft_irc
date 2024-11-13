@@ -13,7 +13,11 @@ int main( int ac, char **av ) {
 
 	server.connectUser();
 
-	std::cout << "Connected client" << std::endl;
+	std::cout << "Connected client 1" << std::endl;
+
+	//server.connectUser();
+
+	//std::cout << "Connected client 2" << std::endl;
 
 	std::string input;
 	while (true) {
@@ -21,10 +25,12 @@ int main( int ac, char **av ) {
 		if (input == "exit")
 			break;
 		input = "server " + input + "\n";
-		send(server.getUser().getUserFd(), input.c_str(), input.length(), 0); // Must use poll
-	}
+		for (int i = 0; i < server.getUserAmt(); i++) {
+			send(server.getUser(0).getUserFd(), input.c_str(), input.length(), 0); // Must use poll
+		}
+	}		
 
-	close(server.getUser().getUserFd());
+	close(server.getUser(0).getUserFd());
 	close(server.getSocket());
 	return 0;
 }

@@ -33,8 +33,12 @@ struct sockaddr_in &Server::getAddress() {
 	return _address;
 }
 
-User &Server::getUser() {
-	return *_user;
+User &Server::getUser( int i ) {
+	return _user[i];
+}
+
+int Server::getUserAmt() {
+	return _user.size();
 }
 
 
@@ -73,10 +77,6 @@ void Server::start() {
 	}
 }
 
-void	Server::addUser(User &user) {
-	_user = &user;
-}
-
 void Server::connectUser() {
 	int new_socket;
 	int addrlen = sizeof(_address);
@@ -88,5 +88,5 @@ void Server::connectUser() {
 		close(_server_fd);
 		exit(1);
 	}
-	_user = new User(new_socket, "michel", "michou");
+	_user.push_back(User(new_socket, "michel", "michou"));
 }

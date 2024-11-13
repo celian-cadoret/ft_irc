@@ -11,7 +11,7 @@ class Server {
 		int _server_fd;
 		struct sockaddr_in _address;
 
-		User *_user;
+		std::vector<User> _user;
 	
 	public:
 		Server();
@@ -25,9 +25,9 @@ class Server {
 		std::string getPassword();
 		int &getSocket();
 		struct sockaddr_in &getAddress();
-		void	addUser(User &user);
-		User &getUser();
+		User &getUser( int i );
+		int getUserAmt();
 
 		void start();
-		void	connectUser();
+		void connectUser();
 };

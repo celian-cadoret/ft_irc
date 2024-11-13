@@ -7,5 +7,6 @@
 #include <netinet/in.h>  // Pour les structures d'adresse (sockaddr_in)
 #include <unistd.h>      // Pour close()
 #include <cstdlib>
+#include <vector>
 #include "Server.hpp"
 #include "User.hpp"
