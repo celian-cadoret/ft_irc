@@ -11,7 +11,7 @@ class Server {
 		int _server_fd;
 		struct sockaddr_in _address;
 
-		User _user;
+		User *_user;
 	
 	public:
 		Server();

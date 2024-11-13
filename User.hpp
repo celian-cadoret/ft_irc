@@ -4,9 +4,9 @@
 
 class User {
 	private:
+		int _user_fd;
 		std::string _username;
 		std::string _nickname;
-		int _user_fd;
 	
 	public:
 		User();

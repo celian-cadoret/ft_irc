@@ -34,7 +34,7 @@ struct sockaddr_in &Server::getAddress() {
 }
 
 User &Server::getUser() {
-	return _user;
+	return *_user;
 }
 
 
@@ -74,7 +74,7 @@ void Server::start() {
 }
 
 void	Server::addUser(User &user) {
-	_user = user;
+	_user = &user;
 }
 
 void Server::connectUser() {
@@ -88,5 +88,5 @@ void Server::connectUser() {
 		close(_server_fd);
 		exit(1);
 	}
-	_user = User(new_socket, "michel", "michou");
+	_user = new User(new_socket, "michel", "michou");
 }
