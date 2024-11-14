@@ -4,7 +4,7 @@ User::User() : _user_fd(0) {}
 
 User::User( User const &src ) : _user_fd(src._user_fd) {}
 
-User::User( int user_fd, std::string username, std::string nickname) : _user_fd(user_fd), _username(username), _nickname(nickname) {}
+User::User( int user_fd, std::string username, std::string nickname ) : _user_fd(user_fd), _username(username), _nickname(nickname) {}
 
 User::~User() {}
 

@@ -25,7 +25,7 @@ std::string Server::getPassword() {
 	return _password;
 }
 
-int &Server::getSocket() {
+int Server::getSocket() {
 	return _server_fd;
 }
 

@@ -11,7 +11,7 @@ class User {
 	public:
 		User();
 		User( User const &src );
-		User( int user_fd, std::string username, std::string nickname);
+		User( int user_fd, std::string username, std::string nickname );
 		~User();
 		int	getUserFd();
 		std::string	getUsername();

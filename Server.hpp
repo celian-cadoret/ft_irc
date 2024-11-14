@@ -10,7 +10,6 @@ class Server {
 		std::string _password;
 		int _server_fd;
 		struct sockaddr_in _address;
-
 		std::vector<User> _user;
 	
 	public:
@@ -23,7 +22,7 @@ class Server {
 
 		int getPort();
 		std::string getPassword();
-		int &getSocket();
+		int getSocket();
 		struct sockaddr_in &getAddress();
 		User &getUser( int i );
 		int getUserAmt();
