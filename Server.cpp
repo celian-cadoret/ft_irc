@@ -77,17 +77,34 @@ void Server::start() {
 	}
 }
 
-void Server::connectUser() {
-	int new_socket;
+void Server::connectUser( std::vector<pollfd> &new_pollfds ) {
 	int addrlen = sizeof(_address);
-
-	// Accept a connection
-	new_socket = accept(_server_fd, (struct sockaddr *)&_address, (socklen_t*)&addrlen);
+	int new_socket = accept(_server_fd, (struct sockaddr *)&_address, (socklen_t*)&addrlen);
 	if (new_socket < 0) {
 		std::cerr << "Listen failed" << std::endl;
 		close(_server_fd);
 		exit(1);
 	}
 	_user.push_back(User(new_socket, "michel", "michou"));
-	std::cout << "Connected client " << _user.size() << std::endl;
+	std::cout << "Connected client " << _user.size() << " (" << new_socket << ")" << std::endl;
+
+	pollfd new_client = {new_socket, POLLIN | POLLPRI, 0};
+	new_pollfds.push_back(new_client);
+}
+
+void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it ) {
+	char msg[1024];
+
+	int rc = recv(it->fd, msg, 1024, 0);
+	if (rc < 0) {
+		std::cerr << "Read error" << std::endl;
+		return ;
+	}
+	if (rc == 0) {
+		std::cout << "Client left" << std::endl;
+	}
+	else {
+		std::cout << msg << std::endl;
+	}
+	(void)pollfds;
 }

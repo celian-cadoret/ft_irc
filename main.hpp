@@ -8,5 +8,6 @@
 #include <unistd.h>      // Pour close()
 #include <cstdlib>
 #include <vector>
+#include <poll.h>
 #include "Server.hpp"
 #include "User.hpp"

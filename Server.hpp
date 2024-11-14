@@ -28,5 +28,6 @@ class Server {
 		int getUserAmt();
 
 		void start();
-		void connectUser();
+		void connectUser( std::vector<pollfd> &new_pollfds );
+		void manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it );
 };

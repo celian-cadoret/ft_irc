@@ -16,7 +16,7 @@ User &User::operator=( User const &src ) {
 	return *this;
 }
 
-int	User::getUserFd() {
+int	User::getSocket() {
 	return (_user_fd);
 }
 

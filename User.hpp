@@ -13,7 +13,7 @@ class User {
 		User( User const &src );
 		User( int user_fd, std::string username, std::string nickname );
 		~User();
-		int	getUserFd();
+		int	getSocket();
 		std::string	getUsername();
 		std::string	getNickname();
 
