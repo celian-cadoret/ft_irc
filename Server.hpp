@@ -26,6 +26,7 @@ class Server {
 		struct sockaddr_in &getAddress();
 		User &getUser( int i );
 		int getUserAmt();
+		int getUserFromSocket( int socket );
 
 		void start();
 		void connectUser( std::vector<pollfd> &new_pollfds );

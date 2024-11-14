@@ -41,6 +41,14 @@ int Server::getUserAmt() {
 	return _user.size();
 }
 
+int Server::getUserFromSocket( int socket ) {
+	for (size_t i = 0; i < _user.size(); i++) {
+		if (_user[i].getSocket() == socket)
+			return i;
+	}
+	return 0;
+}
+
 
 void Server::start() {
 	int opt = 1;
@@ -85,7 +93,7 @@ void Server::connectUser( std::vector<pollfd> &new_pollfds ) {
 		close(_server_fd);
 		exit(1);
 	}
-	_user.push_back(User(new_socket, "michel", "michou"));
+	_user.push_back(User(new_socket));
 	std::cout << "Connected client " << _user.size() << " (" << new_socket << ")" << std::endl;
 
 	pollfd new_client = {new_socket, POLLIN | POLLPRI, 0};
@@ -93,10 +101,10 @@ void Server::connectUser( std::vector<pollfd> &new_pollfds ) {
 }
 
 void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it ) {
-	char msg[1024];
+	char buff[2048];
 
-	int rc = recv(it->fd, msg, 1024, 0);
-	msg[rc] = '\0';
+	int rc = recv(it->fd, buff, 2048, 0);
+	buff[rc] = '\0';
 	if (rc < 0) {
 		std::cerr << "Read error" << std::endl;
 		return ;
@@ -105,6 +113,11 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 		std::cout << "Client left" << std::endl;
 	}
 	else {
+		std::string msg;
+		msg.assign(buff);
+
+		if (msg.substr(0, 5) == "NICK ")
+			_user[getUserFromSocket(it->fd)].setNickname(msg.substr(5, msg.size() - 6));
 		std::cout << msg;
 	}
 	(void)pollfds;
