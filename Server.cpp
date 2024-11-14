@@ -96,6 +96,7 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 	char msg[1024];
 
 	int rc = recv(it->fd, msg, 1024, 0);
+	msg[rc] = '\0';
 	if (rc < 0) {
 		std::cerr << "Read error" << std::endl;
 		return ;
@@ -104,7 +105,7 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 		std::cout << "Client left" << std::endl;
 	}
 	else {
-		std::cout << msg << std::endl;
+		std::cout << msg;
 	}
 	(void)pollfds;
 }
