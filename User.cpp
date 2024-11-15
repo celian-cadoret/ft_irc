@@ -2,7 +2,7 @@
 
 User::User() : _user_fd(0), _op(false), _connect_state(0) {}
 
-User::User( User const &src ) : _user_fd(src._user_fd), _op(src._op), _connect_state(src._connect_state) {}
+User::User( User const &src ) : _user_fd(src._user_fd), _username(src._username), _nickname(src._nickname), _op(src._op), _connect_state(src._connect_state) {}
 
 User::User( int user_fd ) : _user_fd(user_fd), _op(false), _connect_state(0) {}
 

@@ -110,13 +110,14 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 		return ;
 	}
 	if (rc == 0) {
-		std::cout << "Client left" << std::endl;
+		std::cout << "User left" << std::endl;
+		it = deleteUser(pollfds, it);
 	}
 	else {
 		std::string msg;
 		msg.assign(buff);
-		User &curr = _user[getUserFromSocket(it->fd)];
 		std::string userenv = std::getenv("USER");
+		User &curr = _user[getUserFromSocket(it->fd)];
 
 		if (curr.getConnectState() == 0) // Ignore the CAP LS
 			curr.incrementConnectState();
@@ -145,27 +146,20 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 				std::cout << curr.getNickname() << ", " << curr.getUsername() << std::endl;
 			}
 		}
-		else
-			std::cout << msg;
+		else if (msg.substr(0, 6) != "QUIT :") {
+			msg = curr.getNickname() + " " + msg;
+			for (std::vector<pollfd>::iterator it3 = pollfds.begin() + 1; it3 != pollfds.end(); it3++) {
+				send(it3->fd, msg.c_str(), msg.size(), 0);
+			}
+		}
+		//std::cout << msg;
 	}
-	(void)pollfds;
 }
 
-void Server::deleteUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it ) {
-	std::vector<User> tmp2;
-	size_t iuser = getUserFromSocket(it->fd);
-	for (size_t i = 0; i < _user.size(); i++) {
-		if (i != iuser)
-			tmp2.push_back(_user[i]);
-	}
-	_user = tmp2;
+std::vector<pollfd>::iterator Server::deleteUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it ) {
+	_user.erase(_user.begin() + getUserFromSocket(it->fd));
 	close(it->fd);
-
-	std::vector<pollfd> tmp;
-	std::vector<pollfd>::iterator itp;
-	for (itp = pollfds.begin(); itp != pollfds.end(); itp++) {
-		if (itp != it)
-			tmp.push_back(*itp);
-	}
-	pollfds = tmp;
+	std::vector<pollfd>::iterator its = it - 1;
+	pollfds.erase(it);
+	return its;
 }

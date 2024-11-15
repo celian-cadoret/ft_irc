@@ -31,9 +31,7 @@ int main( int ac, char **av ) {
 					catch (std::exception &e) {
 						std::cerr << e.what() << std::endl;
 						if (it + 1 == pollfds.end()) {
-							std::vector<pollfd>::iterator ittmp = it - 1;
-							server.deleteUser(pollfds, it);
-							it = ittmp;
+							it = server.deleteUser(pollfds, it);
 							continue;
 						}
 						else

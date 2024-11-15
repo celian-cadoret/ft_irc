@@ -31,5 +31,5 @@ class Server {
 		void start();
 		void connectUser( std::vector<pollfd> &new_pollfds );
 		void manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it );
-		void deleteUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it );
+		std::vector<pollfd>::iterator deleteUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it );
 };
