@@ -7,24 +7,23 @@ class User {
 		int _user_fd;
 		std::string _username;
 		std::string _nickname;
-		std::string _password;
 		bool _op;
-		bool _username_set;
-		bool _nickname_set;
-		bool _password_set;
+		int _connect_state;
 	
 	public:
 		User();
 		User( User const &src );
 		User( int user_fd );
 		~User();
+
 		int	getSocket();
 		std::string	getUsername();
 		std::string	getNickname();
 		std::string getPassword();
-		void setUsername( std::string username );
+		int getConnectState();
+		void incrementConnectState( int n = 1 );
 		void setNickname( std::string nickname );
-		void setPassword( std::string password );
+		void setUsername( std::string username );
 
 		User &operator=( User const &src );
 };

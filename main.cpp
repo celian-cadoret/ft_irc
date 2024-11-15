@@ -24,8 +24,20 @@ int main( int ac, char **av ) {
 			if (it->revents & POLLIN) {
 				if (it->fd == server.getSocket())
 					server.connectUser(new_pollfds);
-				else
-					server.manageUser(pollfds, it);
+				else {
+					try {
+						server.manageUser(pollfds, it);
+					}
+					catch (std::exception &e) {
+						std::cerr << e.what() << std::endl;
+						if (it + 1 == pollfds.end()) {
+							server.deleteUser(pollfds, it);
+							it = pollfds.begin();
+						}
+						else
+							server.deleteUser(pollfds, it);
+					}
+				}
 			}
 		}
 		pollfds.insert(pollfds.end(), new_pollfds.begin(), new_pollfds.end());

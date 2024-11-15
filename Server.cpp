@@ -115,10 +115,57 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 	else {
 		std::string msg;
 		msg.assign(buff);
+		User &curr = _user[getUserFromSocket(it->fd)];
+		std::string userenv = std::getenv("USER");
 
-		if (msg.substr(0, 5) == "NICK ")
-			_user[getUserFromSocket(it->fd)].setNickname(msg.substr(5, msg.size() - 6));
-		std::cout << msg;
+		if (curr.getConnectState() == 0) // Ignore the CAP LS
+			curr.incrementConnectState();
+		else if (curr.getConnectState() == 1) {
+			if (msg.substr(0, 5) == "NICK ")
+				throw std::exception(); // empty
+			if (msg.substr(0, 6) == "PASS :") {
+				if (msg.substr(6, msg.size() - 7) == _password)
+					curr.incrementConnectState();
+				else 
+					throw std::exception(); // invalid
+			}
+			
+		}
+		else if (curr.getConnectState() == 2) {
+			if (msg.substr(0, 5) == "NICK ") {
+				curr.setNickname(msg.substr(5, msg.size() - 6));
+				curr.incrementConnectState();
+			}
+		}
+		else if (curr.getConnectState() == 3) {
+			if (msg.substr(0, 5) == "USER ") {
+				curr.setUsername(msg.substr(11 + userenv.size(), msg.size() - 12 - userenv.size()));
+				curr.incrementConnectState();
+				std::cout << "User successfully connected" << std::endl;
+				std::cout << curr.getNickname() << ", " << curr.getUsername() << std::endl;
+			}
+		}
+		else
+			std::cout << msg;
 	}
 	(void)pollfds;
+}
+
+void Server::deleteUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it ) {
+	std::vector<User> tmp2;
+	size_t iuser = getUserFromSocket(it->fd);
+	for (size_t i = 0; i < _user.size(); i++) {
+		if (i != iuser)
+			tmp2.push_back(_user[i]);
+	}
+	_user = tmp2;
+	close(it->fd);
+
+	std::vector<pollfd> tmp;
+	std::vector<pollfd>::iterator itp;
+	for (itp = pollfds.begin(); itp != pollfds.end(); itp++) {
+		if (itp != it)
+			tmp.push_back(*itp);
+	}
+	pollfds = tmp;
 }
