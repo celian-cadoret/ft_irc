@@ -30,12 +30,8 @@ int main( int ac, char **av ) {
 					}
 					catch (std::exception &e) {
 						std::cerr << e.what() << std::endl;
-						if (it + 1 == pollfds.end()) {
-							it = server.deleteUser(pollfds, it);
-							continue;
-						}
-						else
-							server.deleteUser(pollfds, it);
+						it = server.deleteUser(pollfds, it);
+						continue;
 					}
 				}
 			}
