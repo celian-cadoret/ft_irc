@@ -2,12 +2,13 @@
 
 #include "main.hpp"
 
+class Channel;
+
 class User {
 	private:
 		int _user_fd;
 		std::string _username;
 		std::string _nickname;
-		bool _op;
 		int _connect_state;
 	
 	public:
@@ -24,6 +25,9 @@ class User {
 		void incrementConnectState( int n = 1 );
 		void setNickname( std::string nickname );
 		void setUsername( std::string username );
+		void joinChannel( std::vector<Channel> &channels, std::string name );
+		void quitChannel( std::vector<Channel> &channels, std::string name );
 
 		User &operator=( User const &src );
+		bool operator==( User const &src );
 };

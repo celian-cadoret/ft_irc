@@ -11,3 +11,4 @@
 #include <poll.h>
 #include "Server.hpp"
 #include "User.hpp"
+#include "Channel.hpp"

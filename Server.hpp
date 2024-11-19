@@ -3,6 +3,7 @@
 #include "main.hpp"
 
 class User;
+class Channel;
 
 class Server {
 	private:
@@ -11,6 +12,7 @@ class Server {
 		int _server_fd;
 		struct sockaddr_in _address;
 		std::vector<User> _user;
+		std::vector<Channel> _channels;
 	
 	public:
 		Server();

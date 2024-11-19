@@ -5,7 +5,7 @@ INCLUDE = ./
 CC = c++
 CFLAGS = -Wall -Wextra -Werror -std=c++98
 
-FILES = main.cpp Server.cpp User.cpp
+FILES = main.cpp Server.cpp User.cpp Channel.cpp
 OBJECTS = $(FILES:.cpp=.o)
 
 %.o: %.cpp

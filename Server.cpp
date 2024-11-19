@@ -148,6 +148,7 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 		}
 		else if (msg.substr(0, 6) != "QUIT :") {
 			msg = curr.getNickname() + " " + msg;
+			//msg = "PRIVMSG #general :" + msg; // might be how we send to a channel
 			for (std::vector<pollfd>::iterator it3 = pollfds.begin() + 1; it3 != pollfds.end(); it3++) {
 				send(it3->fd, msg.c_str(), msg.size(), 0);
 			}
