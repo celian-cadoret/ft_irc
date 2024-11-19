@@ -96,7 +96,7 @@ void Server::connectUser( std::vector<pollfd> &new_pollfds ) {
 	_user.push_back(User(new_socket));
 	std::cout << "Connected client " << _user.size() << " (" << new_socket << ")" << std::endl;
 
-	pollfd new_client = {new_socket, POLLIN | POLLPRI, 0};
+	pollfd new_client = {new_socket, POLLIN | POLLOUT, 0};
 	new_pollfds.push_back(new_client);
 }
 
