@@ -15,6 +15,8 @@ int main( int ac, char **av ) {
 		return 1;
 	}
 
+	int error = 0;
+
 	std::vector<pollfd> pollfds;
 	pollfd tmp = {server.getSocket(), POLLIN, 0};
 	pollfds.push_back(tmp);
@@ -23,7 +25,10 @@ int main( int ac, char **av ) {
 	while (true) {
 		std::vector<pollfd> new_pollfds;
 
-		poll(pollfds.data(), pollfds.size(), -1);
+		if (poll(pollfds.data(), pollfds.size(), -1) < 0) {
+			error = 1;
+			break;
+		}
 
 		std::vector<pollfd>::iterator it;
 		for (it = pollfds.begin(); it != pollfds.end(); it++) {
@@ -49,5 +54,6 @@ int main( int ac, char **av ) {
 		close(server.getUser(i).getSocket());
 	}
 	close(server.getSocket());
-	return 0;
+
+	return error;
 }
