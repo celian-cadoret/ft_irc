@@ -6,7 +6,7 @@ int main( int ac, char **av ) {
 		return 1;
 	}
 
-	Server server(atoi(av[1]), av[2]);
+	Server server("PortHub", atoi(av[1]), av[2]);
 	server.start();
 
 	std::vector<pollfd> pollfds;

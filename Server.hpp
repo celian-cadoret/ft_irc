@@ -7,6 +7,7 @@ class Channel;
 
 class Server {
 	private:
+		std::string _name;
 		int _port;
 		std::string _password;
 		int _server_fd;
@@ -17,7 +18,7 @@ class Server {
 	public:
 		Server();
 		Server( Server const &src );
-		Server( int port, std::string password );
+		Server( std::string name, int port, std::string password );
 		~Server();
 
 		Server &operator=( Server const &src );
