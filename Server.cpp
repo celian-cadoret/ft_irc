@@ -140,8 +140,10 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 			}
 		}
 		else if (msg.substr(0, 6) != "QUIT :") {
-			if (msg.substr(0, 6) == "JOIN #") {
+			if (msg.substr(0, 5) == "JOIN ") {
 				std::string channel_name = msg.substr(5);
+				if (channel_name[0] != '#')
+					channel_name = "#" + channel_name;
 				User &curr = _user[getUserFromSocket(it->fd)];
 				curr.joinChannel(_channels, channel_name);
 				msg = ":" + curr.getNickname() + "!" + curr.getNickname() + "@localhost JOIN " + channel_name + "\r\n";
@@ -156,7 +158,7 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 				send(it->fd, msg.c_str(), msg.size(), 0);
 			}
 		}
-		//std::cout << msg;
+		std::cout << msg;
 	}
 }
 
@@ -166,4 +168,11 @@ std::vector<pollfd>::iterator Server::deleteUser( std::vector<pollfd> &pollfds, 
 	std::vector<pollfd>::iterator its = it - 1;
 	pollfds.erase(it);
 	return its;
+}
+
+
+void Server::sendAll( std::string buff ) {
+	for (size_t i = 0; i < _user.size(); i++) {
+		send(_user[i].getSocket(), buff.c_str(), buff.size(), 0);
+	}
 }
