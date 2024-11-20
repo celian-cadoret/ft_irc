@@ -147,10 +147,35 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 			}
 		}
 		else if (msg.substr(0, 6) != "QUIT :") {
-			msg = curr.getNickname() + " " + msg;
-			//msg = "PRIVMSG #general :" + msg; // might be how we send to a channel
-			for (std::vector<pollfd>::iterator it3 = pollfds.begin() + 1; it3 != pollfds.end(); it3++) {
-				send(it3->fd, msg.c_str(), msg.size(), 0);
+			if (msg.substr(0, 6) == "JOIN #") {
+				/*msg = ":tgriblin!~d@0::1 JOIN #test";
+				send(it->fd, msg.c_str(), msg.size(), 0);
+				msg = ":MODE #test +nt";
+				send(it->fd, msg.c_str(), msg.size(), 0);
+				msg = ":353 tgriblin = #test :@tgriblin";
+				send(it->fd, msg.c_str(), msg.size(), 0);
+				msg = ":366 tgriblin #test :End of /NAMES list.";
+				send(it->fd, msg.c_str(), msg.size(), 0);*/
+				msg = ":tgriblin!Thomas Gribling@localhost JOIN #test\r\n";
+				send(it->fd, msg.c_str(), msg.size(), 0);
+				msg = ":server.name MODE #test +nt\r\n";
+				send(it->fd, msg.c_str(), msg.size(), 0);
+				msg = ":server.name 332 tgriblin #test :letopic\r\n";
+				send(it->fd, msg.c_str(), msg.size(), 0);
+				msg = ":server.name 353 tgriblin = #test :@tgriblin\r\n";
+				send(it->fd, msg.c_str(), msg.size(), 0);
+				msg = ":server.name 366 tgriblin #test :End of NAMES list.\r\n";
+				send(it->fd, msg.c_str(), msg.size(), 0);
+				/*_sendall(CreatorFd, _printMessage("332", this->_clients[CreatorFd]->getNickName(), ChannelName + " :" + it->second->getTopic()));
+				_sendall(CreatorFd, _printMessage("353", this->_clients[CreatorFd]->getNickName() + " = " + ChannelName, it->second->listAllUsers()));
+				_sendall(CreatorFd, _printMessage("353", this->_clients[CreatorFd]->getNickName() + " " + ChannelName, ":End of NAMES list"));*/
+			}
+			else {
+				msg = curr.getNickname() + " " + msg;
+				//msg = "PRIVMSG #general :" + msg; // might be how we send to a channel
+				for (std::vector<pollfd>::iterator it3 = pollfds.begin() + 1; it3 != pollfds.end(); it3++) {
+					send(it3->fd, msg.c_str(), msg.size(), 0);
+				}
 			}
 		}
 		//std::cout << msg;
