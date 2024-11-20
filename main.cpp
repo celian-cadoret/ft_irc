@@ -7,7 +7,13 @@ int main( int ac, char **av ) {
 	}
 
 	Server server("PortHub", atoi(av[1]), av[2]);
-	server.start();
+	try {
+		server.start();
+	}
+	catch (std::exception &e) {
+		std::cerr << e.what() << std::endl;
+		return 1;
+	}
 
 	std::vector<pollfd> pollfds;
 	pollfd tmp = {server.getSocket(), POLLIN, 0};
@@ -37,7 +43,6 @@ int main( int ac, char **av ) {
 			}
 		}
 		pollfds.insert(pollfds.end(), new_pollfds.begin(), new_pollfds.end());
-		//send(server.getUser(0).getSocket(), input.c_str(), input.length(), 0);
 	}
 
 	for (int i = 0; i < server.getUserAmt(); i++) {

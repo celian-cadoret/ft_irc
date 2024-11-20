@@ -51,20 +51,16 @@ int Server::getUserFromSocket( int socket ) {
 
 
 void Server::start() {
-	int opt = 1;
-
 	// Create socket
 	_server_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (!_server_fd) {
-		std::cerr << "Socket failed" << std::endl;
-		exit(1);
-	}
+	if (!_server_fd)
+		throw std::exception(); // Socket failed
 
 	// Attack socket to the provided port
+	int opt = 1;
 	if (setsockopt(_server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
-		std::cerr << "Setsockopt error" << std::endl;
+		throw std::exception(); // Setsockopt failed
 		close(_server_fd);
-		exit(1);
 	}
 	_address.sin_family = AF_INET;
 	_address.sin_addr.s_addr = INADDR_ANY;
@@ -72,16 +68,14 @@ void Server::start() {
 
 	// Associate socket to address and port
 	if (bind(_server_fd, (struct sockaddr *)&_address, sizeof(_address)) < 0) {
-		std::cerr << "Bind failed" << std::endl;
+		throw std::exception(); // Bind failed
 		close(_server_fd);
-		exit(1);
 	}
 
 	// Listen socket
 	if (listen(_server_fd, 3) < 0) {
-		std::cerr << "Listen failed" << std::endl;
+		throw std::exception(); // Listen failed
 		close(_server_fd);
-		exit(1);
 	}
 }
 
@@ -101,9 +95,9 @@ void Server::connectUser( std::vector<pollfd> &new_pollfds ) {
 }
 
 void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it ) {
-	char buff[2048];
+	char buff[8192];
 
-	int rc = recv(it->fd, buff, 2048, 0);
+	int rc = recv(it->fd, buff, 8192, 0); // TODO
 	buff[rc] = '\0';
 	if (rc < 0) {
 		std::cerr << "Read error" << std::endl;
@@ -114,8 +108,7 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 		it = deleteUser(pollfds, it);
 	}
 	else {
-		std::string msg;
-		msg.assign(buff);
+		std::string msg = buff;
 		std::string userenv = std::getenv("USER");
 		User &curr = _user[getUserFromSocket(it->fd)];
 
@@ -148,15 +141,18 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 		}
 		else if (msg.substr(0, 6) != "QUIT :") {
 			if (msg.substr(0, 6) == "JOIN #") {
-				msg = ":tgriblin!tgriblin@localhost JOIN #test\r\n";
+				std::string channel_name = msg.substr(5);
+				User &curr = _user[getUserFromSocket(it->fd)];
+				curr.joinChannel(_channels, channel_name);
+				msg = ":" + curr.getNickname() + "!" + curr.getNickname() + "@localhost JOIN " + channel_name + "\r\n";
 				send(it->fd, msg.c_str(), msg.size(), 0);
-				msg = ":server.name MODE #test +nt\r\n";
+				//msg = ":" + _name + " MODE " + channel_name + " +nt\r\n";
+				//send(it->fd, msg.c_str(), msg.size(), 0);
+				//msg = ":" + _name + " 332 " + curr.getNickname() + " " + channel_name + " :letopic\r\n";
+				//send(it->fd, msg.c_str(), msg.size(), 0);
+				msg = ":" + _name + " 353 " + curr.getNickname() + " = " + channel_name + " :@" + curr.getNickname() + "\r\n";
 				send(it->fd, msg.c_str(), msg.size(), 0);
-				msg = ":server.name 332 tgriblin #test :letopic\r\n";
-				send(it->fd, msg.c_str(), msg.size(), 0);
-				msg = ":server.name 353 tgriblin = #test :@tgriblin\r\n";
-				send(it->fd, msg.c_str(), msg.size(), 0);
-				msg = ":server.name 366 tgriblin #test :End of NAMES list.\r\n";
+				msg = ":" + _name + " 366 " + curr.getNickname() + " " + channel_name + " :End of NAMES list.\r\n";
 				send(it->fd, msg.c_str(), msg.size(), 0);
 			}
 		}
