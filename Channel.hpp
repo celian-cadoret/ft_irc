@@ -22,6 +22,7 @@ class Channel {
 		void addOp( User &toAdd );
 		void removeOp( User &toRemove );
 		int getUserAmt();
+		std::string getUserList();
 
 		Channel &operator=( Channel const &src );
 };

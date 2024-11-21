@@ -30,4 +30,8 @@ class User {
 
 		User &operator=( User const &src );
 		bool operator==( User const &src );
+		bool operator<( User const &src );
+		bool operator<=( User const &src );
+		bool operator>( User const &src );
+		bool operator>=( User const &src );
 };

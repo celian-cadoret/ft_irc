@@ -67,7 +67,21 @@ User &User::operator=( User const &src ) {
 }
 
 bool User::operator==( User const &src ) {
-	if (_username == src._username && _nickname == src._nickname && _user_fd == src._user_fd)
-		return true;
-	return false;
+	return _username == src._username && _nickname == src._nickname && _user_fd == src._user_fd;
+}
+
+bool User::operator<( User const &src ) {
+	return _nickname < src._nickname;
+}
+
+bool User::operator<=( User const &src ) {
+	return _nickname <= src._nickname;
+}
+
+bool User::operator>( User const &src ) {
+	return _nickname > src._nickname;
+}
+
+bool User::operator>=( User const &src ) {
+	return _nickname >= src._nickname;
 }

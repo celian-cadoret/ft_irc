@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <vector>
 #include <poll.h>
+#include <algorithm>
 #include "Server.hpp"
 #include "User.hpp"
 #include "Channel.hpp"

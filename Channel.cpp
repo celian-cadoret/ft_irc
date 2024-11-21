@@ -42,6 +42,17 @@ int Channel::getUserAmt() {
 	return _users.size();	
 }
 
+std::string Channel::getUserList() {
+	std::string out;
+	std::sort(_users.begin(), _users.end());
+	for (std::vector<User>::iterator it = _users.begin(); it != _users.end(); it++) {
+		out += it->getNickname();
+		if (it + 1 != _users.end())
+			out += " ";
+	}
+	return out;
+}
+
 
 Channel &Channel::operator=( Channel const &src ) {
 	_name = src._name;
