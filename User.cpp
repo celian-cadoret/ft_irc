@@ -37,6 +37,10 @@ void User::setUsername( std::string username ) {
 	_username = username;
 }
 
+void User::setSocket( int socket ) {
+	_user_fd = socket;
+}
+
 
 void User::joinChannel( std::vector<Channel> &channels, std::string name ) {
 	std::vector<Channel>::iterator it;

@@ -17,23 +17,35 @@ std::string Channel::getName() {
 }
 
 void Channel::addUser( User &toAdd ) {
-	_users.push_back(toAdd);
+	std::vector<User>::iterator it;
+	for (it = _users.begin(); it != _users.end(); it++) {
+		if (it->getNickname() == toAdd.getNickname())
+			it->setSocket(toAdd.getSocket());
+	}
+	if (it == _users.end())
+		_users.push_back(toAdd);
 }
 
 void Channel::removeUser( User &toRemove ) {
 	for (std::vector<User>::iterator it = _users.begin(); it != _users.end(); it++) {
-		if (*it == toRemove)
+		if (it->getNickname() == toRemove.getNickname())
 			_users.erase(it);
 	}
 }
 
 void Channel::addOp( User &toAdd ) {
-	_op.push_back(toAdd);
+	std::vector<User>::iterator it;
+	for (it = _op.begin(); it != _op.end(); it++) {
+		if (it->getNickname() == toAdd.getNickname())
+			it->setSocket(toAdd.getSocket());
+	}
+	if (it == _op.end())
+		_op.push_back(toAdd);
 }
 
 void Channel::removeOp( User &toRemove ) {
 	for (std::vector<User>::iterator it = _op.begin(); it != _op.end(); it++) {
-		if (*it == toRemove)
+		if (it->getNickname() == toRemove.getNickname())
 			_op.erase(it);
 	}
 }

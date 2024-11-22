@@ -164,8 +164,11 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 				send(it->fd, msg.c_str(), msg.size(), 0);
 				msg = ":" + _name + " 353 " + curr.getNickname() + " = " + channel_name + " :" + getChannel(channel_name).getUserList() + "\r\n";
 				send(it->fd, msg.c_str(), msg.size(), 0);
-				//msg = ":" + _name + " 366 " + curr.getNickname() + " " + channel_name + " :End of NAMES list.\r\n";
-				//send(it->fd, msg.c_str(), msg.size(), 0);
+				msg = ":" + _name + " 353 " + curr.getNickname() + " " + channel_name + " :End of NAMES list.\r\n";
+				send(it->fd, msg.c_str(), msg.size(), 0);
+			}
+			else if (msg.substr(0, 9) == "PRIVMSG #") {
+				sendAll(msg, it->fd);
 			}
 		}
 		std::cout << msg;
