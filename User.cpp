@@ -45,7 +45,7 @@ void User::setSocket( int socket ) {
 void User::joinChannel( std::vector<Channel> &channels, std::string name ) {
 	std::vector<Channel>::iterator it;
 	for (it = channels.begin(); it != channels.end(); it++) {
-		if (it->getName() == name)
+		if (it->getName() == name && !it->isUserInChannel(this->getNickname()))
 			it->addUser(this->getNickname());
 	}
 	// Channel was not found

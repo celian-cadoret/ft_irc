@@ -5,7 +5,8 @@
 class Channel {
 	private:
 		std::string _name;
-		std::map<std::string, bool*> _user; // bool[0] = online, bool[1] = op
+		std::map<std::string, bool> _user;
+		std::vector<std::string> _op;
 	
 	public:
 		Channel();
@@ -22,9 +23,10 @@ class Channel {
 		void setUserOffline( std::string nickname );
 		int getUserAmt();
 		std::string getUserList();
-		std::map<std::string, bool*> &getUsers();
+		std::map<std::string, bool> &getUsers();
 		bool getUserState( std::string nickname );
 		bool isUserInChannel( std::string nickname );
+		bool isUserOp( std::string nickname );
 
 		Channel &operator=( Channel const &src );
 };

@@ -150,6 +150,7 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 		else if (msg.substr(0, 6) != "QUIT :") {
 			if (msg.substr(0, 5) == "JOIN ") {
 				std::string channel_name = msg.substr(5);
+				std::string curr_user = _user[getUserFromSocket(it->fd)].getNickname();
 				if (channel_name[channel_name.size() - 1] == '\n')
 					channel_name = channel_name.substr(0, channel_name.size() - 1);
 				curr.joinChannel(_channels, channel_name);
@@ -158,10 +159,9 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 			else if (msg.substr(0, 9) == "PRIVMSG #" && msg.find(':') != std::string::npos) {
 				std::string channel_name = msg.substr(8, msg.find(':') - 9);
 				std::string curr_user = _user[getUserFromSocket(it->fd)].getNickname();
-				if (!getChannel(channel_name) || !(getChannel(channel_name)->isUserInChannel(curr_user)) || getChannel(channel_name)->getUserState(curr_user) == false) {
+				if (!getChannel(channel_name) || !getChannel(channel_name)->isUserInChannel(curr_user) || !getChannel(channel_name)->getUserState(curr_user)) {
 					curr.joinChannel(_channels, channel_name);
 					joinChannelClient(it, channel_name);
-					getChannel(channel_name)->setUserOnline(curr_user);
 				}
 				else
 					sendAll(msg);
@@ -171,8 +171,10 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 }
 
 std::vector<pollfd>::iterator Server::deleteUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it ) {
-	for (std::vector<Channel>::iterator itc = _channels.begin(); itc != _channels.end(); itc++) {
-		itc->setUserOffline(_user[getUserFromSocket(it->fd)].getNickname());
+	if (!_channels.empty()) {
+		for (std::vector<Channel>::iterator itc = _channels.begin(); itc != _channels.end(); itc++) {
+			itc->setUserOffline(_user[getUserFromSocket(it->fd)].getNickname());
+		}
 	}
 	_user.erase(_user.begin() + getUserFromSocket(it->fd));
 	close(it->fd);
@@ -182,10 +184,12 @@ std::vector<pollfd>::iterator Server::deleteUser( std::vector<pollfd> &pollfds, 
 }
 
 void Server::joinChannelClient( std::vector<pollfd>::iterator &it, std::string name ) {
-	std::string msg;
-	User &curr = _user[getUserFromSocket(it->fd)];
 	if (!getChannel(name))
 		return ;
+	
+	std::string msg;
+	User &curr = _user[getUserFromSocket(it->fd)];
+	getChannel(name)->setUserOnline(curr.getNickname());
 
 	msg = ":" + curr.getNickname() + "!~" + curr.getNickname() + "@localhost JOIN " + name + "\r\n";
 	sendAll(msg);
