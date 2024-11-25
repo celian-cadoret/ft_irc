@@ -25,6 +25,8 @@ class Channel {
 		int getUserAmt();
 		std::string getUserList();
 		std::map<std::string, bool*> &getUsers();
+		bool *getUserDatas( std::string nickname );
+		bool isUserInChannel( std::string nickname );
 
 		Channel &operator=( Channel const &src );
 };

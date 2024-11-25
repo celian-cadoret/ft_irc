@@ -157,10 +157,19 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 			}
 			else if (msg.substr(0, 9) == "PRIVMSG #" && msg.find(':') != std::string::npos) {
 				std::string channel_name = msg.substr(8, msg.find(':') - 9);
-				sendAll(msg, it->fd);
+				std::string curr_user = _user[getUserFromSocket(it->fd)].getNickname();
+				if (!getChannel(channel_name).isUserInChannel(curr_user))
+					msg = "User is not registered in channel (" + curr_user + ")";
+				else if (!getChannel(channel_name).getUserDatas(curr_user)[0])
+					msg = "User is registered but hasn't join (" + curr_user + ")";
+				else if (getChannel(channel_name).getUserDatas(curr_user)[0])
+					msg = "User is registered and has joined (" + curr_user + ")";
+				msg = "PRIVMSG " + channel_name + " :" + msg + "\r\n";
+				std::cout << msg;
+				sendAll(msg);
 			}
 		}
-		std::cout << msg;
+		//std::cout << msg;
 	}
 }
 

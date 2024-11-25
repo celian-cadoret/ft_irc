@@ -72,6 +72,14 @@ std::map<std::string, bool*> &Channel::getUsers() {
 	return _user;
 }
 
+bool *Channel::getUserDatas( std::string nickname ) {
+	return _user[nickname];
+}
+
+bool Channel::isUserInChannel( std::string nickname ) {
+	return _user.find(nickname) != _user.end();
+}
+
 
 Channel &Channel::operator=( Channel const &src ) {
 	_name = src._name;
