@@ -96,7 +96,7 @@ void Server::connectUser( std::vector<pollfd> &new_pollfds ) {
 		exit(1);
 	}
 	_user.push_back(User(new_socket));
-	std::cout << "Connected client " << _user.size() << " (" << new_socket << ")" << std::endl;
+	std::cout << "Negotiating with client #" << _user.size() << ", fd=" << new_socket << std::endl;
 
 	pollfd new_client = {new_socket, POLLIN | POLLOUT, 0};
 	new_pollfds.push_back(new_client);
@@ -128,7 +128,7 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 			if (msg.substr(0, 6) == "PASS :") {
 				if (msg.substr(6, msg.size() - 7) == _password)
 					curr.incrementConnectState();
-				else 
+				else
 					throw std::exception(); // invalid
 			}
 			
@@ -143,8 +143,7 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 			if (msg.substr(0, 5) == "USER ") {
 				curr.setUsername(msg.substr(11 + userenv.size(), msg.size() - 12 - userenv.size()));
 				curr.incrementConnectState();
-				std::cout << "User successfully connected" << std::endl;
-				std::cout << curr.getNickname() << ", " << curr.getUsername() << std::endl;
+				std::cout << "User successfully connected: " << curr.getNickname() << ", " << curr.getUsername() << std::endl;
 			}
 		}
 		else if (msg.substr(0, 6) != "QUIT :") {
@@ -163,8 +162,7 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 					curr.joinChannel(_channels, channel_name);
 					joinChannelClient(it, channel_name);
 				}
-				else
-					sendAll(msg);
+				sendAll(msg);	
 			}
 		}
 	}
