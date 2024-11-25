@@ -7,22 +7,24 @@ class User;
 class Channel {
 	private:
 		std::string _name;
-		std::vector<User> _users;
-		std::vector<User> _op;
+		std::map<std::string, bool*> _user; // bool[0] = online, bool[1] = op
 	
 	public:
 		Channel();
 		Channel( Channel const &src );
-		Channel( std::string name, User &owner );
+		Channel( std::string name, std::string owner );
 		~Channel();
 
 		std::string getName();
-		void addUser( User &toAdd );
-		void removeUser( User &toRemove );
-		void addOp( User &toAdd );
-		void removeOp( User &toRemove );
+		void addUser( std::string toAdd );
+		void removeUser( std::string toRemove );
+		void addOp( std::string toAdd );
+		void removeOp( std::string toRemove );
+		void setUserOnline( std::string nickname );
+		void setUserOffline( std::string nickname );
 		int getUserAmt();
 		std::string getUserList();
+		std::map<std::string, bool*> &getUsers();
 
 		Channel &operator=( Channel const &src );
 };

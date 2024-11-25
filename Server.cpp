@@ -152,22 +152,11 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 				std::string channel_name = msg.substr(5);
 				if (channel_name[channel_name.size() - 1] == '\n')
 					channel_name = channel_name.substr(0, channel_name.size() - 1);
-				if (channel_name[0] != '#')
-					channel_name = "#" + channel_name;
-				User &curr = _user[getUserFromSocket(it->fd)];
 				curr.joinChannel(_channels, channel_name);
-				msg = ":" + curr.getNickname() + "!~" + curr.getNickname() + "@localhost JOIN " + channel_name + "\r\n";
-				sendAll(msg);
-				msg = ":" + _name + " MODE " + channel_name + " +nt\r\n";
-				send(it->fd, msg.c_str(), msg.size(), 0);
-				msg = ":" + _name + " 332 " + curr.getNickname() + " " + channel_name + " :Goat land le lieu des goats\r\n";
-				send(it->fd, msg.c_str(), msg.size(), 0);
-				msg = ":" + _name + " 353 " + curr.getNickname() + " = " + channel_name + " :" + getChannel(channel_name).getUserList() + "\r\n";
-				send(it->fd, msg.c_str(), msg.size(), 0);
-				msg = ":" + _name + " 353 " + curr.getNickname() + " " + channel_name + " :End of NAMES list.\r\n";
-				send(it->fd, msg.c_str(), msg.size(), 0);
+				joinChannelClient(it, channel_name);
 			}
-			else if (msg.substr(0, 9) == "PRIVMSG #") {
+			else if (msg.substr(0, 9) == "PRIVMSG #" && msg.find(':') != std::string::npos) {
+				std::string channel_name = msg.substr(8, msg.find(':') - 9);
 				sendAll(msg, it->fd);
 			}
 		}
@@ -176,11 +165,30 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 }
 
 std::vector<pollfd>::iterator Server::deleteUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it ) {
+	for (std::vector<Channel>::iterator itc = _channels.begin(); itc != _channels.end(); itc++) {
+		itc->setUserOffline(_user[getUserFromSocket(it->fd)].getNickname());
+	}
 	_user.erase(_user.begin() + getUserFromSocket(it->fd));
 	close(it->fd);
 	std::vector<pollfd>::iterator its = it - 1;
 	pollfds.erase(it);
 	return its;
+}
+
+void Server::joinChannelClient( std::vector<pollfd>::iterator &it, std::string name ) {
+	std::string msg;
+	User &curr = _user[getUserFromSocket(it->fd)];
+
+	msg = ":" + curr.getNickname() + "!~" + curr.getNickname() + "@localhost JOIN " + name + "\r\n";
+	sendAll(msg);
+	msg = ":" + _name + " MODE " + name + " +nt\r\n";
+	send(it->fd, msg.c_str(), msg.size(), 0);
+	msg = ":" + _name + " 332 " + curr.getNickname() + " " + name + " :Goat land le lieu des goats\r\n";
+	send(it->fd, msg.c_str(), msg.size(), 0);
+	msg = ":" + _name + " 353 " + curr.getNickname() + " = " + name + " :" + getChannel(name).getUserList() + "\r\n";
+	send(it->fd, msg.c_str(), msg.size(), 0);
+	msg = ":" + _name + " 353 " + curr.getNickname() + " " + name + " :End of NAMES list.\r\n";
+	send(it->fd, msg.c_str(), msg.size(), 0);
 }
 
 

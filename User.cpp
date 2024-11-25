@@ -46,18 +46,18 @@ void User::joinChannel( std::vector<Channel> &channels, std::string name ) {
 	std::vector<Channel>::iterator it;
 	for (it = channels.begin(); it != channels.end(); it++) {
 		if (it->getName() == name)
-			it->addUser(*this);
+			it->addUser(this->getNickname());
 	}
 	// Channel was not found
 	if (it == channels.end())
-		channels.push_back(Channel(name, *this));
+		channels.push_back(Channel(name, this->getNickname()));
 }
 
 void User::quitChannel( std::vector<Channel> &channels, std::string name ) {
 	std::vector<Channel>::iterator it;
 	for (it = channels.begin(); it != channels.end(); it++) {
 		if (it->getName() == name)
-			it->removeUser(*this);
+			it->removeUser(this->getNickname());
 	}
 }
 
@@ -68,24 +68,4 @@ User &User::operator=( User const &src ) {
 	_user_fd = src._user_fd;
 	_connect_state = src._connect_state;
 	return *this;
-}
-
-bool User::operator==( User const &src ) {
-	return _username == src._username && _nickname == src._nickname && _user_fd == src._user_fd;
-}
-
-bool User::operator<( User const &src ) {
-	return _nickname < src._nickname;
-}
-
-bool User::operator<=( User const &src ) {
-	return _nickname <= src._nickname;
-}
-
-bool User::operator>( User const &src ) {
-	return _nickname > src._nickname;
-}
-
-bool User::operator>=( User const &src ) {
-	return _nickname >= src._nickname;
 }

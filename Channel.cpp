@@ -2,11 +2,11 @@
 
 Channel::Channel() {}
 
-Channel::Channel( Channel const &src ) : _name(src._name), _users(src._users), _op(src._op) {}
+Channel::Channel( Channel const &src ) : _name(src._name), _user(src._user) {}
 
-Channel::Channel( std::string name, User &owner ) : _name(name) {
-	_users.push_back(owner);
-	_op.push_back(owner);
+Channel::Channel( std::string name, std::string owner ) : _name(name) {
+	bool tmp[2] = {true, true};
+	_user[owner] = tmp;
 }
 
 Channel::~Channel() {}
@@ -16,59 +16,65 @@ std::string Channel::getName() {
 	return _name;
 }
 
-void Channel::addUser( User &toAdd ) {
-	std::vector<User>::iterator it;
-	for (it = _users.begin(); it != _users.end(); it++) {
-		if (it->getNickname() == toAdd.getNickname())
-			it->setSocket(toAdd.getSocket());
-	}
-	if (it == _users.end())
-		_users.push_back(toAdd);
+void Channel::addUser( std::string toAdd ) {
+	bool tmp[2] = {true, false};
+	if (_user.find(toAdd) == _user.end())
+		_user[toAdd] = tmp;
 }
 
-void Channel::removeUser( User &toRemove ) {
-	for (std::vector<User>::iterator it = _users.begin(); it != _users.end(); it++) {
-		if (it->getNickname() == toRemove.getNickname())
-			_users.erase(it);
+void Channel::removeUser( std::string toRemove ) {
+	if (_user.find(toRemove) != _user.end())
+		_user.erase(_user.find(toRemove));
+}
+
+void Channel::addOp( std::string toAdd ) {
+	if (_user.find(toAdd) != _user.end()) {
+		bool tmp[2] = {_user[toAdd][0], true};
+		_user[toAdd] = tmp;
 	}
 }
 
-void Channel::addOp( User &toAdd ) {
-	std::vector<User>::iterator it;
-	for (it = _op.begin(); it != _op.end(); it++) {
-		if (it->getNickname() == toAdd.getNickname())
-			it->setSocket(toAdd.getSocket());
+void Channel::removeOp( std::string toRemove ) {
+	if (_user.find(toRemove) != _user.end()) {
+		bool tmp[2] = {_user[toRemove][0], false};
+		_user[toRemove] = tmp;
 	}
-	if (it == _op.end())
-		_op.push_back(toAdd);
 }
 
-void Channel::removeOp( User &toRemove ) {
-	for (std::vector<User>::iterator it = _op.begin(); it != _op.end(); it++) {
-		if (it->getNickname() == toRemove.getNickname())
-			_op.erase(it);
+void Channel::setUserOnline( std::string nickname ) {
+	if (_user.find(nickname) != _user.end()) {
+		bool tmp[2] = {true, _user[nickname][1]};
+		_user[nickname] = tmp;
+	}
+}
+
+void Channel::setUserOffline( std::string nickname ) {
+	if (_user.find(nickname) != _user.end()) {
+		bool tmp[2] = {false, _user[nickname][1]};
+		_user[nickname] = tmp;
 	}
 }
 
 int Channel::getUserAmt() {
-	return _users.size();	
+	return _user.size();	
 }
 
 std::string Channel::getUserList() {
 	std::string out;
-	std::sort(_users.begin(), _users.end());
-	for (std::vector<User>::iterator it = _users.begin(); it != _users.end(); it++) {
-		out += it->getNickname();
-		if (it + 1 != _users.end())
-			out += " ";
+	for (std::map<std::string, bool*>::iterator it = _user.begin(); it != _user.end(); it++) {
+		out += it->first;
+		out += " ";
 	}
-	return out;
+	return out.substr(0, out.size() - 1);
+}
+
+std::map<std::string, bool*> &Channel::getUsers() {
+	return _user;
 }
 
 
 Channel &Channel::operator=( Channel const &src ) {
 	_name = src._name;
-	_users = src._users;
-	_op = src._op;
+	_user = src._user;
 	return *this;
 }

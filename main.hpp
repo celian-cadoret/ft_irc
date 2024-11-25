@@ -8,6 +8,7 @@
 #include <unistd.h>      // Pour close()
 #include <cstdlib>
 #include <vector>
+#include <map>
 #include <poll.h>
 #include <algorithm>
 #include "Server.hpp"

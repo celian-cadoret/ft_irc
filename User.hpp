@@ -30,9 +30,4 @@ class User {
 		void quitChannel( std::vector<Channel> &channels, std::string name );
 
 		User &operator=( User const &src );
-		bool operator==( User const &src );
-		bool operator<( User const &src );
-		bool operator<=( User const &src );
-		bool operator>( User const &src );
-		bool operator>=( User const &src );
 };
