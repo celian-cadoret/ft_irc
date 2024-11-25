@@ -2,8 +2,6 @@
 
 #include "main.hpp"
 
-class User;
-
 class Channel {
 	private:
 		std::string _name;
@@ -25,7 +23,7 @@ class Channel {
 		int getUserAmt();
 		std::string getUserList();
 		std::map<std::string, bool*> &getUsers();
-		bool *getUserDatas( std::string nickname );
+		bool getUserState( std::string nickname );
 		bool isUserInChannel( std::string nickname );
 
 		Channel &operator=( Channel const &src );

@@ -49,12 +49,12 @@ int Server::getUserFromSocket( int socket ) {
 	return 0;
 }
 
-Channel &Server::getChannel( std::string name ) {
+Channel *Server::getChannel( std::string name ) {
 	for (std::vector<Channel>::iterator it = _channels.begin(); it != _channels.end(); it++) {
 		if (it->getName() == name)
-			return *it;
+			return &(*it);
 	}
-	return *_channels.end();
+	return NULL;
 }
 
 
@@ -158,18 +158,15 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 			else if (msg.substr(0, 9) == "PRIVMSG #" && msg.find(':') != std::string::npos) {
 				std::string channel_name = msg.substr(8, msg.find(':') - 9);
 				std::string curr_user = _user[getUserFromSocket(it->fd)].getNickname();
-				if (!getChannel(channel_name).isUserInChannel(curr_user))
-					msg = "User is not registered in channel (" + curr_user + ")";
-				else if (!getChannel(channel_name).getUserDatas(curr_user)[0])
-					msg = "User is registered but hasn't join (" + curr_user + ")";
-				else if (getChannel(channel_name).getUserDatas(curr_user)[0])
-					msg = "User is registered and has joined (" + curr_user + ")";
-				msg = "PRIVMSG " + channel_name + " :" + msg + "\r\n";
-				std::cout << msg;
-				sendAll(msg);
+				if (!getChannel(channel_name) || !(getChannel(channel_name)->isUserInChannel(curr_user)) || getChannel(channel_name)->getUserState(curr_user) == false) {
+					curr.joinChannel(_channels, channel_name);
+					joinChannelClient(it, channel_name);
+					getChannel(channel_name)->setUserOnline(curr_user);
+				}
+				else
+					sendAll(msg);
 			}
 		}
-		//std::cout << msg;
 	}
 }
 
@@ -187,6 +184,8 @@ std::vector<pollfd>::iterator Server::deleteUser( std::vector<pollfd> &pollfds, 
 void Server::joinChannelClient( std::vector<pollfd>::iterator &it, std::string name ) {
 	std::string msg;
 	User &curr = _user[getUserFromSocket(it->fd)];
+	if (!getChannel(name))
+		return ;
 
 	msg = ":" + curr.getNickname() + "!~" + curr.getNickname() + "@localhost JOIN " + name + "\r\n";
 	sendAll(msg);
@@ -194,7 +193,7 @@ void Server::joinChannelClient( std::vector<pollfd>::iterator &it, std::string n
 	send(it->fd, msg.c_str(), msg.size(), 0);
 	msg = ":" + _name + " 332 " + curr.getNickname() + " " + name + " :Goat land le lieu des goats\r\n";
 	send(it->fd, msg.c_str(), msg.size(), 0);
-	msg = ":" + _name + " 353 " + curr.getNickname() + " = " + name + " :" + getChannel(name).getUserList() + "\r\n";
+	msg = ":" + _name + " 353 " + curr.getNickname() + " = " + name + " :" + getChannel(name)->getUserList() + "\r\n";
 	send(it->fd, msg.c_str(), msg.size(), 0);
 	msg = ":" + _name + " 353 " + curr.getNickname() + " " + name + " :End of NAMES list.\r\n";
 	send(it->fd, msg.c_str(), msg.size(), 0);

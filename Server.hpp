@@ -30,7 +30,7 @@ class Server {
 		User &getUser( int i );
 		int getUserAmt();
 		int getUserFromSocket( int socket );
-		Channel &getChannel( std::string name );
+		Channel *getChannel( std::string name );
 
 		void start();
 		void connectUser( std::vector<pollfd> &new_pollfds );

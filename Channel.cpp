@@ -28,31 +28,23 @@ void Channel::removeUser( std::string toRemove ) {
 }
 
 void Channel::addOp( std::string toAdd ) {
-	if (_user.find(toAdd) != _user.end()) {
-		bool tmp[2] = {_user[toAdd][0], true};
-		_user[toAdd] = tmp;
-	}
+	if (_user.find(toAdd) != _user.end())
+		_user[toAdd][1] = false;
 }
 
 void Channel::removeOp( std::string toRemove ) {
-	if (_user.find(toRemove) != _user.end()) {
-		bool tmp[2] = {_user[toRemove][0], false};
-		_user[toRemove] = tmp;
-	}
+	if (_user.find(toRemove) != _user.end())
+		_user[toRemove][1] = false;
 }
 
 void Channel::setUserOnline( std::string nickname ) {
-	if (_user.find(nickname) != _user.end()) {
-		bool tmp[2] = {true, _user[nickname][1]};
-		_user[nickname] = tmp;
-	}
+	if (_user.find(nickname) != _user.end())
+		_user[nickname][0] = true;
 }
 
 void Channel::setUserOffline( std::string nickname ) {
-	if (_user.find(nickname) != _user.end()) {
-		bool tmp[2] = {false, _user[nickname][1]};
-		_user[nickname] = tmp;
-	}
+	if (_user.find(nickname) != _user.end())
+		_user[nickname][0] = false;
 }
 
 int Channel::getUserAmt() {
@@ -72,12 +64,14 @@ std::map<std::string, bool*> &Channel::getUsers() {
 	return _user;
 }
 
-bool *Channel::getUserDatas( std::string nickname ) {
-	return _user[nickname];
+bool Channel::getUserState( std::string nickname ) {
+	return _user[nickname][0];
 }
 
 bool Channel::isUserInChannel( std::string nickname ) {
-	return _user.find(nickname) != _user.end();
+	if (_user.find(nickname) != _user.end())
+		return true;
+	return false;
 }
 
 
