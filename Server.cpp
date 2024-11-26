@@ -203,9 +203,9 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 		channel_name = msg.substr(6, msg.find(' ', 6) - 6);
 
 		msg = ":" + curr_user + " " + msg;
-		//msg = ":" + _name + " 332 " + curr_user + " " + channel_name + " :hallo\r\n";
+		//msg = ":" + _name + " 332 " + curr_user + " " + channel_name + " :hallo\r\n"; // show topic
 		sendAll(msg);
-
+		
 	}
 	// "TOPIC #hey" // affiche le topic
 	// "TOPIC #hey :le topic" // set le topic
