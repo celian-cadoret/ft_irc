@@ -162,7 +162,8 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 					curr.joinChannel(_channels, channel_name);
 					joinChannelClient(it, channel_name);
 				}
-				sendAll(msg);	
+				msg = ":" + curr_user + " " + msg;
+				sendAll(msg, it->fd);	
 			}
 		}
 	}

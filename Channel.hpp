@@ -6,7 +6,7 @@ class Channel {
 	private:
 		std::string _name;
 		std::map<std::string, bool> _user;
-	
+
 	public:
 		Channel();
 		Channel( Channel const &src );
