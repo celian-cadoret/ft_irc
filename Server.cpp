@@ -158,7 +158,7 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 			else if (msg.substr(0, 9) == "PRIVMSG #" && msg.find(':') != std::string::npos) {
 				std::string channel_name = msg.substr(8, msg.find(':') - 9);
 				std::string curr_user = _user[getUserFromSocket(it->fd)].getNickname();
-				if (!getChannel(channel_name) || !getChannel(channel_name)->isUserInChannel(curr_user) || !getChannel(channel_name)->getUserState(curr_user)) {
+				if (!getChannel(channel_name) || !getChannel(channel_name)->isUserInChannel(curr_user)) {
 					curr.joinChannel(_channels, channel_name);
 					joinChannelClient(it, channel_name);
 				}
@@ -171,7 +171,7 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 std::vector<pollfd>::iterator Server::deleteUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it ) {
 	if (!_channels.empty()) {
 		for (std::vector<Channel>::iterator itc = _channels.begin(); itc != _channels.end(); itc++) {
-			itc->setUserOffline(_user[getUserFromSocket(it->fd)].getNickname());
+			itc->removeUser(_user[getUserFromSocket(it->fd)].getNickname());
 		}
 	}
 	_user.erase(_user.begin() + getUserFromSocket(it->fd));
@@ -187,7 +187,6 @@ void Server::joinChannelClient( std::vector<pollfd>::iterator &it, std::string n
 	
 	std::string msg;
 	User &curr = _user[getUserFromSocket(it->fd)];
-	getChannel(name)->setUserOnline(curr.getNickname());
 
 	msg = ":" + curr.getNickname() + "!~" + curr.getNickname() + "@localhost JOIN " + name + "\r\n";
 	sendAll(msg);

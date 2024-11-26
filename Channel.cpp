@@ -6,7 +6,6 @@ Channel::Channel( Channel const &src ) : _name(src._name), _user(src._user) {}
 
 Channel::Channel( std::string name, std::string owner ) : _name(name) {
 	_user[owner] = true;
-	_op.push_back(owner);
 }
 
 Channel::~Channel() {}
@@ -18,57 +17,28 @@ std::string Channel::getName() {
 
 void Channel::addUser( std::string toAdd ) {
 	if (_user.find(toAdd) == _user.end())
-		_user[toAdd] = true;
+		_user[toAdd] = false;
 }
 
 void Channel::removeUser( std::string toRemove ) {
 	if (_user.find(toRemove) != _user.end())
 		_user.erase(_user.find(toRemove));
-
-	if (_op.empty())
-		return ;
-
-	for (std::vector<std::string>::iterator it = _op.begin(); it != _op.end(); it++) {
-		if (*it == toRemove)
-			_op.erase(it);
-	}
 }
 
 void Channel::addOp( std::string toAdd ) {
-	if (_op.empty())
+	if (_user.empty())
 		return ;
 	
-	for (std::vector<std::string>::iterator it = _op.begin(); it != _op.end(); it++) {
-		if (*it == toAdd)
-			return ;
-	}
-	_op.push_back(toAdd);
+	if (_user.find(toAdd) != _user.end())
+		_user[toAdd] = true;
 }
 
 void Channel::removeOp( std::string toRemove ) {
-	if (_op.empty())
-		return ;
-	
-	for (std::vector<std::string>::iterator it = _op.begin(); it != _op.end(); it++) {
-		if (*it == toRemove)
-			_op.erase(it);
-	}
-}
-
-void Channel::setUserOnline( std::string nickname ) {
 	if (_user.empty())
 		return ;
 	
-	if (_user.find(nickname) != _user.end())
-		_user[nickname] = true;
-}
-
-void Channel::setUserOffline( std::string nickname ) {
-	if (_user.empty())
-		return ;
-	
-	if (_user.find(nickname) != _user.end())
-		_user[nickname] = false;
+	if (_user.find(toRemove) != _user.end())
+		_user[toRemove] = false;
 }
 
 int Channel::getUserAmt() {
@@ -81,7 +51,7 @@ std::string Channel::getUserList() {
 
 	std::string out;
 	for (std::map<std::string, bool>::iterator it = _user.begin(); it != _user.end(); it++) {
-		if (isUserOp(it->first))
+		if (it->second)
 			out += "@";
 		out += it->first;
 		out += " ";
@@ -93,25 +63,10 @@ std::map<std::string, bool> &Channel::getUsers() {
 	return _user;
 }
 
-bool Channel::getUserState( std::string nickname ) {
-	return _user[nickname];
-}
-
 bool Channel::isUserInChannel( std::string nickname ) {
 	if (_user.find(nickname) == _user.end())
 		return false;
 	return true;
-}
-
-bool Channel::isUserOp( std::string nickname ) {
-	if (_op.empty())
-		return false;
-
-	for (std::vector<std::string>::iterator it = _op.begin(); it != _op.end(); it++) {
-		if (*it == nickname)
-			return true;
-	}
-	return false;
 }
 
 
