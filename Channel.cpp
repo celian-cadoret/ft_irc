@@ -69,6 +69,16 @@ bool Channel::isUserInChannel( std::string nickname ) {
 	return true;
 }
 
+bool Channel::isUserOp( std::string nickname ) {
+	if (_user.empty())
+		return false;
+
+	if (_user.find(nickname) != _user.end())
+		return _user[nickname];
+
+	return false;
+}
+
 
 Channel &Channel::operator=( Channel const &src ) {
 	_name = src._name;

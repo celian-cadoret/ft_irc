@@ -50,6 +50,9 @@ int Server::getUserFromSocket( int socket ) {
 }
 
 Channel *Server::getChannel( std::string name ) {
+	if (_channels.empty())
+		return NULL;
+
 	for (std::vector<Channel>::iterator it = _channels.begin(); it != _channels.end(); it++) {
 		if (it->getName() == name)
 			return &(*it);
@@ -96,7 +99,7 @@ void Server::connectUser( std::vector<pollfd> &new_pollfds ) {
 		exit(1);
 	}
 	_user.push_back(User(new_socket));
-	std::cout << "Negotiating with client #" << _user.size() << ", fd=" << new_socket << std::endl;
+	std::cout << "[SERVER] Negotiating with client #" << _user.size() << ", fd=" << new_socket << std::endl;
 
 	pollfd new_client = {new_socket, POLLIN | POLLOUT, 0};
 	new_pollfds.push_back(new_client);
@@ -114,6 +117,7 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 	if (rc == 0) {
 		std::cout << "User left" << std::endl;
 		it = deleteUser(pollfds, it);
+		updateUserList(_user[getUserFromSocket(it->fd)].getNickname());
 	}
 	else {
 		std::string msg = buff;
@@ -143,30 +147,69 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 			if (msg.substr(0, 5) == "USER ") {
 				curr.setUsername(msg.substr(11 + userenv.size(), msg.size() - 12 - userenv.size()));
 				curr.incrementConnectState();
-				std::cout << "User successfully connected: " << curr.getNickname() << ", " << curr.getUsername() << std::endl;
+				std::cout << "[SERVER] User successfully connected: " << curr.getNickname() << ", " << curr.getUsername() << std::endl;
 			}
 		}
-		else if (msg.substr(0, 6) != "QUIT :") {
-			if (msg.substr(0, 5) == "JOIN ") {
-				std::string channel_name = msg.substr(5);
-				std::string curr_user = _user[getUserFromSocket(it->fd)].getNickname();
-				if (channel_name[channel_name.size() - 1] == '\n')
-					channel_name = channel_name.substr(0, channel_name.size() - 1);
-				curr.joinChannel(_channels, channel_name);
-				joinChannelClient(it, channel_name);
-			}
-			else if (msg.substr(0, 9) == "PRIVMSG #" && msg.find(':') != std::string::npos) {
-				std::string channel_name = msg.substr(8, msg.find(':') - 9);
-				std::string curr_user = _user[getUserFromSocket(it->fd)].getNickname();
-				if (!getChannel(channel_name) || !getChannel(channel_name)->isUserInChannel(curr_user)) {
-					curr.joinChannel(_channels, channel_name);
-					joinChannelClient(it, channel_name);
-				}
-				msg = ":" + curr_user + " " + msg;
-				sendAll(msg, it->fd);	
-			}
+		else {
+			parseMessage(it, pollfds, msg);
 		}
+		std::cout << "[" << it->fd << "] " << msg;
 	}
+}
+
+void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd> &pollfds, std::string msg ) {
+	User &curr = _user[getUserFromSocket(it->fd)];
+	std::string curr_user = curr.getNickname();
+	std::string channel_name, target;
+
+	if (msg.substr(0, 5) == "JOIN ") {
+		channel_name = msg.substr(5);
+
+		if (channel_name[channel_name.size() - 1] == '\n')
+			channel_name = channel_name.substr(0, channel_name.size() - 1);
+		curr.joinChannel(_channels, channel_name);
+		joinChannelClient(it, channel_name);
+
+	}
+	else if (msg.substr(0, 6) == "QUIT :") {
+		it = deleteUser(pollfds, it);
+		updateUserList();
+	}
+	else if (msg.substr(0, 9) == "PRIVMSG #") {
+		channel_name = msg.substr(8, msg.find(':') - 9);
+
+		if (!getChannel(channel_name) || !getChannel(channel_name)->isUserInChannel(curr_user)) {
+			curr.joinChannel(_channels, channel_name);
+			joinChannelClient(it, channel_name);
+		}
+		msg = ":" + curr_user + " " + msg;
+		sendAll(msg, it->fd);	
+
+	}
+	else if (msg.substr(0, 6) == "KICK #") {
+		channel_name = msg.substr(5, msg.find(' ', 5) - 5);
+		target = msg.substr(msg.find(' ', 5) + 1, msg.find(':') - msg.find(' ', 5) - 2);
+
+		if (getChannel(channel_name) && getChannel(channel_name)->isUserOp(curr_user)) {
+			msg = ":" + curr_user + "!~" + curr_user + "@localhost " + msg;
+			getChannel(channel_name)->removeUser(target);
+		}
+		else
+			msg = "Error You need to be a channel operator in #konversation to do that.\r\n";
+		sendAll(msg);
+
+	}
+	else if (msg.substr(0, 7) == "TOPIC #") {
+		channel_name = msg.substr(6, msg.find(' ', 6) - 6);
+
+		msg = ":" + curr_user + " " + msg;
+		//msg = ":" + _name + " 332 " + curr_user + " " + channel_name + " :hallo\r\n";
+		sendAll(msg);
+
+	}
+	// "TOPIC #hey" // affiche le topic
+	// "TOPIC #hey :le topic" // set le topic
+	// "INVITE pseudo #channel" // Channel peut etre different du channel de l'user (arg optionnel)
 }
 
 std::vector<pollfd>::iterator Server::deleteUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it ) {
@@ -191,14 +234,34 @@ void Server::joinChannelClient( std::vector<pollfd>::iterator &it, std::string n
 
 	msg = ":" + curr.getNickname() + "!~" + curr.getNickname() + "@localhost JOIN " + name + "\r\n";
 	sendAll(msg);
-	msg = ":" + _name + " MODE " + name + " +nt\r\n";
-	send(it->fd, msg.c_str(), msg.size(), 0);
-	msg = ":" + _name + " 332 " + curr.getNickname() + " " + name + " :Goat land le lieu des goats\r\n";
-	send(it->fd, msg.c_str(), msg.size(), 0);
-	msg = ":" + _name + " 353 " + curr.getNickname() + " = " + name + " :" + getChannel(name)->getUserList() + "\r\n";
-	send(it->fd, msg.c_str(), msg.size(), 0);
-	msg = ":" + _name + " 353 " + curr.getNickname() + " " + name + " :End of NAMES list.\r\n";
-	send(it->fd, msg.c_str(), msg.size(), 0);
+	//msg = ":" + _name + " MODE " + name + " +nt\r\n";
+	//send(it->fd, msg.c_str(), msg.size(), 0);
+	updateUserList(name);
+	
+}
+
+void Server::updateUserList( std::string channel ) {
+	if (_channels.empty())
+		return ;
+
+	std::string msg;
+	if (channel == "") {
+		std::vector<Channel>::iterator it;
+		for (it = _channels.begin(); it != _channels.end(); it++) {
+			updateUserList(it->getName());
+		}
+	}
+	else {
+		if (!getChannel(channel))
+			return ;
+		std::map<std::string, bool>::iterator it;
+		for (it = getChannel(channel)->getUsers().begin(); it != getChannel(channel)->getUsers().end(); it++) {
+			msg = ":" + _name + " 353 " + it->first + " = " + channel + " :" + getChannel(channel)->getUserList() + "\r\n";
+			sendAll(msg);
+			msg = ":" + _name + " 353 " + it->first + " " + channel + " :End of NAMES list.\r\n";
+			sendAll(msg);
+		}
+	}
 }
 
 

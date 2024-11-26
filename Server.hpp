@@ -37,6 +37,8 @@ class Server {
 		void manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it );
 		std::vector<pollfd>::iterator deleteUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it );
 		void joinChannelClient( std::vector<pollfd>::iterator &it, std::string name );
+		void parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd> &pollfds, std::string msg );
+		void updateUserList( std::string channel = "" );
 
 		void sendAll( std::string buff, int ignore = 0 );
 };

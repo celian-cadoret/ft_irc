@@ -3,7 +3,7 @@ NAME = ircserv
 INCLUDE = ./
 
 CC = c++
-CFLAGS = -Wall -Wextra -Werror -std=c++98
+CFLAGS = -Wall -Wextra -Werror -std=c++98 -g
 
 FILES = main.cpp Server.cpp User.cpp Channel.cpp
 OBJECTS = $(FILES:.cpp=.o)
