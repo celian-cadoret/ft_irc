@@ -206,8 +206,10 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 	else if (msg.substr(0, 7) == "TOPIC #") {
 		channel_name = msg.substr(6, msg.find(' ', 6) - 6);
 
-		msg = ":" + curr_user + " " + msg;
-		//msg = ":" + _name + " 332 " + curr_user + " " + channel_name + " :hallo\r\n"; // show topic
+		if (msg.find(":") == std::string::npos)
+			msg = ":" + _name + " 332 " + curr_user + " " + channel_name + " :hallo\r\n";
+		else
+			msg = ":" + curr_user + " " + msg;
 		sendAll(msg);
 		
 	}
