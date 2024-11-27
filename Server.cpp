@@ -226,12 +226,21 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 
 	}
 	else if (msg.substr(0, 7) == "TOPIC #") {
-		channel_name = msg.substr(6, msg.find(' ', 6) - 6);
+		
+		if (msg.find(":") == std::string::npos) {
+			channel_name = msg.substr(6);
+			channel_name = channel_name.substr(0, channel_name.size() - 1);
+		}
+		else
+			channel_name = msg.substr(6, msg.find(' ', 6) - 6);
 		if (!getChannel(channel_name))
 			return ;
 
 		if (msg.find(":") == std::string::npos) {
-			msg = ":" + curr_user + " 332 " + curr_user + " " + channel_name + " :hallo\r\n";
+			if (getChannel(channel_name)->getTopic() != "")
+				msg = ":" + getChannel(channel_name)->getTopicNick() + " 332 " + curr_user + " " + channel_name + " :" + getChannel(channel_name)->getTopic() + "\r\n";
+			else
+				msg = "TOPIC The channel " + channel_name + " has no topic set.\r\n";
 			send(it->fd, msg.c_str(), msg.size(), 0);
 		}
 		else {
@@ -248,8 +257,6 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 	}
 	else if (msg == "exit\n" || msg == "shutdown\n")
 		stop();
-	// "TOPIC #hey" // affiche le topic
-	// "TOPIC #hey :le topic" // set le topic
 	// "INVITE pseudo #channel" // Channel peut etre different du channel de l'user (arg optionnel)
 }
 

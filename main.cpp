@@ -17,11 +17,12 @@ int main( int ac, char **av ) {
 	pollfds.push_back(tmp);
 
 	std::string input;
-	while (server.isRunning()) { // === MAIN LOOP ===
+	while (server.isRunning()) { /* === MAIN LOOP === */
 		std::vector<pollfd> new_pollfds;
 
 		if (poll(pollfds.data(), pollfds.size(), -1) < 0) {
 			error = 1;
+			server.stop();
 			break;
 		}
 
@@ -41,8 +42,7 @@ int main( int ac, char **av ) {
 					}
 				}
 			}
-			else if (it->revents & POLLERR)
-				break;
+			else if (it->revents & POLLERR) {}
 		}
 		pollfds.insert(pollfds.end(), new_pollfds.begin(), new_pollfds.end());
 	}
