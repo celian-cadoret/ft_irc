@@ -255,9 +255,13 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 			}
 		}	
 	}
+	else if (msg.substr(0, 8) == "INVITE #") {}
 	else if (msg == "exit\n" || msg == "shutdown\n")
 		stop();
 	// "INVITE pseudo #channel" // Channel peut etre different du channel de l'user (arg optionnel)
+	// RAW -> "[Invite] invitor invited you to channel #channel."
+	// "[Invite] You invited ccadoret to channel #hahahhahahahhsauydgasygduygasydga."
+	// "[443] tgriblin ccadoret #poiuytreza is already on channel"
 }
 
 std::vector<pollfd>::iterator Server::deleteUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it ) {
