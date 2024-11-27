@@ -6,6 +6,8 @@ class Channel {
 	private:
 		std::string _name;
 		std::map<std::string, bool> _user;
+		std::string _topic;
+		std::string _topic_nick;
 
 	public:
 		Channel();
@@ -21,6 +23,10 @@ class Channel {
 		int getUserAmt();
 		std::string getUserList();
 		std::map<std::string, bool> &getUsers();
+		void setTopic( std::string topic, std::string nick );
+		std::string getTopic();
+		std::string getTopicNick();
+
 		bool isUserInChannel( std::string nickname );
 		bool isUserOp( std::string nickname );
 

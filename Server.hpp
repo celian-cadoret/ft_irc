@@ -14,6 +14,7 @@ class Server {
 		struct sockaddr_in _address;
 		std::vector<User> _user;
 		std::vector<Channel> _channels;
+		bool _running;
 	
 	public:
 		Server();
@@ -30,9 +31,12 @@ class Server {
 		User &getUser( int i );
 		int getUserAmt();
 		int getUserFromSocket( int socket );
+		int getSocketFromNickname( std::string nickname );
 		Channel *getChannel( std::string name );
+		bool isRunning();
 
 		int start();
+		void stop();
 		void connectUser( std::vector<pollfd> &new_pollfds );
 		void manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it );
 		std::vector<pollfd>::iterator deleteUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it );
@@ -41,4 +45,5 @@ class Server {
 		void updateUserList( std::string channel = "" );
 
 		void sendAll( std::string buff, int ignore = 0 );
+		void sendAllChannel( std::string channel, std::string buff, int ignore = 0 );
 };

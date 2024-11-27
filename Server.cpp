@@ -49,6 +49,15 @@ int Server::getUserFromSocket( int socket ) {
 	return 0;
 }
 
+int Server::getSocketFromNickname( std::string nickname ) {
+	std::vector<User>::iterator it;
+	for (it = _user.begin(); it != _user.end(); it++) {
+		if (it->getNickname() == nickname)
+			return it->getSocket();
+	}
+	return 0;
+}
+
 Channel *Server::getChannel( std::string name ) {
 	if (_channels.empty())
 		return NULL;
@@ -58,6 +67,10 @@ Channel *Server::getChannel( std::string name ) {
 			return &(*it);
 	}
 	return NULL;
+}
+
+bool Server::isRunning() {
+	return _running;
 }
 
 
@@ -90,8 +103,13 @@ int Server::start() {
 		close(_server_fd);
 		return 1;
 	}
+	_running = true;
 	std::cout << "[SERVER] Server \"" << _name << "\" running on port " << _port << "." << std::endl;
 	return 0;
+}
+
+void Server::stop() {
+	_running = false;
 }
 
 void Server::connectUser( std::vector<pollfd> &new_pollfds ) {
@@ -192,27 +210,44 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 	}
 	else if (msg.substr(0, 6) == "KICK #") {
 		channel_name = msg.substr(5, msg.find(' ', 5) - 5);
+		if (!getChannel(channel_name))
+			return ;
 		target = msg.substr(msg.find(' ', 5) + 1, msg.find(':') - msg.find(' ', 5) - 2);
 
-		if (getChannel(channel_name) && getChannel(channel_name)->isUserOp(curr_user)) {
+		if (getChannel(channel_name)->isUserOp(curr_user)) {
 			msg = ":" + curr_user + "!~" + curr_user + "@localhost " + msg;
 			getChannel(channel_name)->removeUser(target);
+			sendAll(msg);
 		}
-		else
-			msg = "Error You need to be a channel operator in #konversation to do that.\r\n";
-		sendAll(msg);
+		else {
+			msg = "Error You need to be a channel operator in " + channel_name + " to do that.\r\n";
+			send(it->fd, msg.c_str(), msg.size(), 0);
+		}
 
 	}
 	else if (msg.substr(0, 7) == "TOPIC #") {
 		channel_name = msg.substr(6, msg.find(' ', 6) - 6);
+		if (!getChannel(channel_name))
+			return ;
 
-		if (msg.find(":") == std::string::npos)
-			msg = ":" + _name + " 332 " + curr_user + " " + channel_name + " :hallo\r\n";
-		else
-			msg = ":" + curr_user + " " + msg;
-		sendAll(msg);
-		
+		if (msg.find(":") == std::string::npos) {
+			msg = ":" + curr_user + " 332 " + curr_user + " " + channel_name + " :hallo\r\n";
+			send(it->fd, msg.c_str(), msg.size(), 0);
+		}
+		else {
+			if (getChannel(channel_name)->isUserOp(curr_user)) {
+				getChannel(channel_name)->setTopic(msg.substr(msg.find(":") + 1), curr_user + "!~" + curr_user + "@localhost");
+				msg = ":" + curr_user + "!~" + curr_user + "@localhost " + msg;
+				sendAll(msg);
+			}
+			else {
+				msg = "Error You need to be a channel operator in " + channel_name + " to do that.\r\n";
+				send(it->fd, msg.c_str(), msg.size(), 0);
+			}
+		}	
 	}
+	else if (msg == "exit\n" || msg == "shutdown\n")
+		stop();
 	// "TOPIC #hey" // affiche le topic
 	// "TOPIC #hey :le topic" // set le topic
 	// "INVITE pseudo #channel" // Channel peut etre different du channel de l'user (arg optionnel)
@@ -240,6 +275,10 @@ void Server::joinChannelClient( std::vector<pollfd>::iterator &it, std::string n
 
 	msg = ":" + curr.getNickname() + "!~" + curr.getNickname() + "@localhost JOIN " + name + "\r\n";
 	sendAll(msg);
+	if (getChannel(name)->getTopic() != "") {
+		msg = ":" + getChannel(name)->getTopicNick() + " TOPIC " + name + " :" + getChannel(name)->getTopic() + "\r\n";
+		send(it->fd, msg.c_str(), msg.size(), 0);
+	}
 	//msg = ":" + _name + " MODE " + name + " +nt\r\n";
 	//send(it->fd, msg.c_str(), msg.size(), 0);
 	updateUserList(name);
@@ -275,5 +314,18 @@ void Server::sendAll( std::string buff, int ignore ) {
 	for (size_t i = 0; i < _user.size(); i++) {
 		if (_user[i].getSocket() != ignore)
 			send(_user[i].getSocket(), buff.c_str(), buff.size(), 0);
+	}
+}
+
+void Server::sendAllChannel( std::string channel, std::string buff, int ignore ) {
+	if (!getChannel(channel))
+		return ;
+	
+	std::map<std::string, bool>::iterator it;
+	for (it = getChannel(channel)->getUsers().begin(); it != getChannel(channel)->getUsers().end(); it++) {
+		int fd = getSocketFromNickname(it->first);
+		if (!fd || fd == ignore)
+			continue;
+		send(fd, buff.c_str(), buff.size(), 0);
 	}
 }

@@ -2,7 +2,7 @@
 
 Channel::Channel() {}
 
-Channel::Channel( Channel const &src ) : _name(src._name), _user(src._user) {}
+Channel::Channel( Channel const &src ) : _name(src._name), _user(src._user), _topic(src._topic), _topic_nick(src._topic_nick) {}
 
 Channel::Channel( std::string name, std::string owner ) : _name(name) {
 	_user[owner] = true;
@@ -63,6 +63,20 @@ std::map<std::string, bool> &Channel::getUsers() {
 	return _user;
 }
 
+void Channel::setTopic( std::string topic, std::string nick )  {
+	_topic = topic;
+	_topic_nick = nick;
+}
+
+std::string Channel::getTopic() {
+	return _topic;
+}
+
+std::string Channel::getTopicNick() {
+	return _topic_nick;
+}
+
+
 bool Channel::isUserInChannel( std::string nickname ) {
 	if (_user.find(nickname) == _user.end())
 		return false;
@@ -83,5 +97,7 @@ bool Channel::isUserOp( std::string nickname ) {
 Channel &Channel::operator=( Channel const &src ) {
 	_name = src._name;
 	_user = src._user;
+	_topic = src._topic;
+	_topic_nick = src._topic_nick;
 	return *this;
 }

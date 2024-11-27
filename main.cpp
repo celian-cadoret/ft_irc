@@ -17,7 +17,7 @@ int main( int ac, char **av ) {
 	pollfds.push_back(tmp);
 
 	std::string input;
-	while (true) { // === MAIN LOOP ===
+	while (server.isRunning()) { // === MAIN LOOP ===
 		std::vector<pollfd> new_pollfds;
 
 		if (poll(pollfds.data(), pollfds.size(), -1) < 0) {
