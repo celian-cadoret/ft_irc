@@ -7,13 +7,8 @@ int main( int ac, char **av ) {
 	}
 
 	Server server("PortHub", atoi(av[1]), av[2]);
-	try {
-		server.start();
-	}
-	catch (std::exception &e) {
-		std::cerr << e.what() << std::endl;
+	if (server.start())
 		return 1;
-	}
 
 	int error = 0;
 

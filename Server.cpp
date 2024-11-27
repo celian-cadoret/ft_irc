@@ -61,33 +61,37 @@ Channel *Server::getChannel( std::string name ) {
 }
 
 
-void Server::start() {
-	// Create socket
+int Server::start() {
+	// Create socket (fd)
 	_server_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (!_server_fd)
-		throw std::exception(); // Socket failed
-
-	// Attack socket to the provided port
+	if (!_server_fd) {
+		std::cerr << "[SERVER] Socket failed!" << std::endl;
+		return 1;
+	}
+	// Set its options
 	int opt = 1;
 	if (setsockopt(_server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
-		throw std::exception(); // Setsockopt failed
+		std::cerr << "[SERVER] Setsockopt failed!" << std::endl;
 		close(_server_fd);
+		return 1;
 	}
 	_address.sin_family = AF_INET;
 	_address.sin_addr.s_addr = INADDR_ANY;
 	_address.sin_port = htons(_port);
-
 	// Associate socket to address and port
 	if (bind(_server_fd, (struct sockaddr *)&_address, sizeof(_address)) < 0) {
-		throw std::exception(); // Bind failed
+		std::cerr << "[SERVER] Bind failed!" << std::endl;
 		close(_server_fd);
+		return 1;
 	}
-
 	// Listen socket
 	if (listen(_server_fd, 3) < 0) {
-		throw std::exception(); // Listen failed
+		std::cerr << "[SERVER] Listen failed!" << std::endl;
 		close(_server_fd);
+		return 1;
 	}
+	std::cout << "[SERVER] Server \"" << _name << "\" running on port " << _port << "." << std::endl;
+	return 0;
 }
 
 void Server::connectUser( std::vector<pollfd> &new_pollfds ) {
