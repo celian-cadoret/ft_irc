@@ -17,7 +17,7 @@ int main( int ac, char **av ) {
 	pollfds.push_back(tmp);
 
 	std::string input;
-	while (true) {
+	while (true) { // === MAIN LOOP ===
 		std::vector<pollfd> new_pollfds;
 
 		if (poll(pollfds.data(), pollfds.size(), -1) < 0) {
@@ -41,6 +41,8 @@ int main( int ac, char **av ) {
 					}
 				}
 			}
+			else if (it->revents & POLLERR)
+				break;
 		}
 		pollfds.insert(pollfds.end(), new_pollfds.begin(), new_pollfds.end());
 	}

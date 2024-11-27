@@ -98,28 +98,28 @@ void Server::connectUser( std::vector<pollfd> &new_pollfds ) {
 	int addrlen = sizeof(_address);
 	int new_socket = accept(_server_fd, (struct sockaddr *)&_address, (socklen_t*)&addrlen);
 	if (new_socket < 0) {
-		std::cerr << "Listen failed" << std::endl;
-		close(_server_fd);
-		exit(1);
+		std::cerr << "[SERVER] Client listen failed" << std::endl;
+		return ;
 	}
 	_user.push_back(User(new_socket));
 	std::cout << "[SERVER] Negotiating with client #" << _user.size() << ", fd=" << new_socket << std::endl;
 
-	pollfd new_client = {new_socket, POLLIN | POLLOUT, 0};
+	pollfd new_client = {new_socket, POLLIN, 0};
 	new_pollfds.push_back(new_client);
 }
 
 void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it ) {
-	char buff[8192];
+	size_t buffer_size = 2048;
+	char buff[buffer_size];
 
-	int rc = recv(it->fd, buff, 8192, 0); // TODO
+	int rc = recv(it->fd, buff, buffer_size - 1, 0); // TODO
 	buff[rc] = '\0';
 	if (rc < 0) {
 		std::cerr << "Read error" << std::endl;
 		return ;
 	}
 	if (rc == 0) {
-		std::cout << "User left" << std::endl;
+		std::cout << "[" << it->fd << "] Client disconnected" << std::endl;
 		it = deleteUser(pollfds, it);
 		updateUserList(_user[getUserFromSocket(it->fd)].getNickname());
 	}
