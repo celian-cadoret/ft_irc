@@ -26,6 +26,7 @@ class User {
 		void setNickname( std::string nickname );
 		void setUsername( std::string username );
 		void setSocket( int socket );
+
 		void joinChannel( std::vector<Channel> &channels, std::string name );
 		void quitChannel( std::vector<Channel> &channels, std::string name );
 

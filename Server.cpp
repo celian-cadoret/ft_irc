@@ -143,39 +143,54 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 	}
 	else {
 		std::string msg = buff;
-		std::string userenv = std::getenv("USER");
 		User &curr = _user[getUserFromSocket(it->fd)];
 
-		if (curr.getConnectState() == 0) // Ignore the CAP LS
-			curr.incrementConnectState();
-		else if (curr.getConnectState() == 1) {
-			if (msg.substr(0, 5) == "NICK ")
-				throw std::exception(); // empty
-			if (msg.substr(0, 6) == "PASS :") {
-				if (msg.substr(6, msg.size() - 7) == _password)
-					curr.incrementConnectState();
-				else
-					throw std::exception(); // invalid
-			}
-			
-		}
-		else if (curr.getConnectState() == 2) {
-			if (msg.substr(0, 5) == "NICK ") {
-				curr.setNickname(msg.substr(5, msg.size() - 6));
-				curr.incrementConnectState();
-			}
-		}
-		else if (curr.getConnectState() == 3) {
-			if (msg.substr(0, 5) == "USER ") {
-				curr.setUsername(msg.substr(11 + userenv.size(), msg.size() - 12 - userenv.size()));
-				curr.incrementConnectState();
-				std::cout << "[SERVER] User successfully connected: " << curr.getNickname() << ", " << curr.getUsername() << std::endl;
-			}
-		}
-		else {
-			parseMessage(it, pollfds, msg);
-		}
 		std::cout << "[" << it->fd << "] " << msg;
+		if (curr.getConnectState() > 1)
+			parseMessage(it, pollfds, msg);
+		else
+			treatRequests(msg, curr);
+	}
+}
+
+void Server::treatRequests( std::string msg, User &curr ) {
+	std::string content;
+	if (msg.substr(0, 4) == "CAP ") {} // ignore
+	if (msg.substr(0, 6) == "PASS :") {
+		content = msg.substr(msg.find(":") + 1);
+		if (content[content.size() - 1] == '\n')
+			content = content.substr(0, content.size() - 1);
+	
+		if (content != _password)
+			throw ReqInvalidPass();
+		curr.incrementConnectState();
+	}
+	if (msg.substr(0, 5) == "NICK ") {
+		content = msg.substr(msg.find(" ") + 1);
+		if (content[content.size() - 1] == '\n')
+			content = content.substr(0, content.size() - 1);
+
+		if (content.find(" ") != std::string::npos)
+			throw ReqNickSpace();
+		for (std::vector<User>::iterator it = _user.begin(); it != _user.end(); it++) {
+			if (it->getNickname() == content)
+				throw ReqNickExists();
+		}
+		curr.setNickname(content);
+	}
+	if (msg.substr(0, 5) == "USER ") {
+		if (msg.find(":") == std::string::npos)
+			throw std::exception();
+		
+		content = msg.substr(msg.find(":") + 1);
+		if (content[content.size() - 1] == '\n')
+			content = content.substr(0, content.size() - 1);
+
+		if (!curr.getConnectState())
+			throw ReqInvalidPass();
+		curr.setUsername(content);
+		curr.incrementConnectState();
+		std::cout << "[SERVER] User successfully connected: " << curr.getNickname() << ", " << curr.getUsername() << std::endl;
 	}
 }
 
@@ -339,4 +354,17 @@ void Server::sendAllChannel( std::string channel, std::string buff, int ignore )
 			continue;
 		send(fd, buff.c_str(), buff.size(), 0);
 	}
+}
+
+
+const char *Server::ReqInvalidPass::what() const throw() {
+	return "Invalid password.";
+}
+
+const char *Server::ReqNickSpace::what() const throw() {
+	return "Nickname cannot contain spaces.";
+}
+
+const char *Server::ReqNickExists::what() const throw() {
+	return "Nickname already used.";
 }

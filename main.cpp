@@ -36,7 +36,10 @@ int main( int ac, char **av ) {
 						server.manageUser(pollfds, it);
 					}
 					catch (std::exception &e) {
-						std::cerr << e.what() << std::endl;
+						std::cerr << "[" << it->fd << "] Error: " << e.what() << std::endl;
+						std::string msg = e.what();
+						msg = "error Unable to connect to server: " + msg + "\r\n";
+						send(it->fd, msg.c_str(), msg.size(), 0);
 						it = server.deleteUser(pollfds, it);
 						continue;
 					}

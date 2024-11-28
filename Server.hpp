@@ -41,9 +41,20 @@ class Server {
 		void manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it );
 		std::vector<pollfd>::iterator deleteUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it );
 		void joinChannelClient( std::vector<pollfd>::iterator &it, std::string name );
+		void treatRequests( std::string msg, User &curr );
 		void parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd> &pollfds, std::string msg );
 		void updateUserList( std::string channel = "" );
 
 		void sendAll( std::string buff, int ignore = 0 );
 		void sendAllChannel( std::string channel, std::string buff, int ignore = 0 );
+
+		class ReqInvalidPass : public std::exception {
+			virtual const char *what() const throw();
+		};
+		class ReqNickSpace : public std::exception {
+			virtual const char *what() const throw();
+		};
+		class ReqNickExists : public std::exception {
+			virtual const char *what() const throw();
+		};
 };
