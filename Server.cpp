@@ -291,6 +291,12 @@ std::vector<pollfd>::iterator Server::deleteUser( std::vector<pollfd> &pollfds, 
 	if (!_channels.empty()) {
 		for (std::vector<Channel>::iterator itc = _channels.begin(); itc != _channels.end(); itc++) {
 			itc->removeUser(_user[getUserFromSocket(it->fd)].getNickname());
+			if (!itc->getUserAmt()) {
+				std::vector<Channel>::iterator tmp = itc - 1;
+				_channels.erase(itc);
+				itc = tmp;
+				continue;
+			}
 		}
 	}
 	_user.erase(_user.begin() + getUserFromSocket(it->fd));

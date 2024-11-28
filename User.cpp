@@ -58,9 +58,7 @@ void User::quitChannel( std::vector<Channel> &channels, std::string name ) {
 	for (it = channels.begin(); it != channels.end(); it++) {
 		if (it->getName() == name) {
 			it->removeUser(this->getNickname());
-			std::cout << it->getUserAmt() << std::endl;
 			if (!it->getUserAmt()) {
-				std::cout << "empty" << std::endl;
 				channels.erase(it);
 				break;
 			}
