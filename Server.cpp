@@ -137,7 +137,8 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 		return ;
 	}
 	if (rc == 0) {
-		std::cout << "[" << it->fd << "] Client disconnected" << std::endl;
+		User &curr = _user[getUserFromSocket(it->fd)];
+		std::cout << "[" << it->fd << "<" << curr.getNickname() << ">] Client disconnected" << std::endl;
 		it = deleteUser(pollfds, it);
 		updateUserList(_user[getUserFromSocket(it->fd)].getNickname());
 	}
@@ -145,7 +146,7 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 		std::string msg = buff;
 		User &curr = _user[getUserFromSocket(it->fd)];
 
-		std::cout << "[" << it->fd << "] " << msg;
+		std::cout << "[" << it->fd << "<" << curr.getNickname() << ">] " << msg;
 		if (curr.getConnectState() > 1)
 			parseMessage(it, pollfds, msg);
 		else
@@ -190,6 +191,8 @@ void Server::treatRequests( std::string msg, User &curr ) {
 			throw ReqInvalidPass();
 		curr.setUsername(content);
 		curr.incrementConnectState();
+		msg = "Welcome Successfully connected to " + _name + " !\r\n";
+		send(curr.getSocket(), msg.c_str(), msg.size(), 0);
 		std::cout << "[SERVER] User successfully connected: " << curr.getNickname() << ", " << curr.getUsername() << std::endl;
 	}
 }
