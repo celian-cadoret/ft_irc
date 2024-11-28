@@ -211,8 +211,18 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 		joinChannelClient(it, channel_name);
 
 	}
-	else if (msg.substr(0, 6) == "QUIT :") {
+	else if (msg.substr(0, 6) == "QUIT :") { // Leaving server
 		it = deleteUser(pollfds, it);
+		updateUserList();
+	}
+	else if (msg.substr(0, 6) == "PART #") { // Leaving a channel
+		channel_name = msg.substr(msg.find("#"), msg.find(":") - msg.find("#") - 1);
+		std::cout << "[" << channel_name << "]" << std::endl;
+		if (channel_name[channel_name.size() - 1] == '\n')
+			channel_name = channel_name.substr(0, channel_name.size() - 1);
+		if (!getChannel(channel_name))
+			return ;
+		curr.quitChannel(_channels, channel_name);
 		updateUserList();
 	}
 	else if (msg.substr(0, 9) == "PRIVMSG #") {
@@ -273,16 +283,31 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 			}
 		}	
 	}
-	else if (msg.substr(0, 8) == "INVITE #") {}
+	else if (msg.substr(0, 7) == "INVITE ") {
+		target = msg.substr(msg.find(" ") + 1);
+		target = target.substr(0, target.find("#") - 1);
+		if (!getSocketFromNickname(target) || !getChannel(channel_name)) {
+			msg = target + ": No such nick/channel.\r\n";
+			send(it->fd, msg.c_str(), msg.size(), 0);
+		}
+		else {
+			if (getChannel(channel_name)->isUserInChannel(target)) {
+				msg = "443 " + curr_user + " " + target + " " + channel_name + " is already on channel\r\n";
+				send(it->fd, msg.c_str(), msg.size(), 0);
+			}
+			else {
+				msg = ":" + curr_user + "!~" + curr_user + "@localhost " + msg;
+				send(getSocketFromNickname(target), msg.c_str(), msg.size(), 0);
+			}
+		}
+	}
 	else if (toLowerStr(msg.substr(0, 6)) == "mode #") {
 		std::vector<std::string> args = splitStr(msg, ' ');
 	}
 	else if (msg == "exit\n" || msg == "shutdown\n")
 		stop();
 	// "INVITE pseudo #channel" // Channel peut etre different du channel de l'user (arg optionnel)
-	// RAW -> "[Invite] invitor invited you to channel #channel."
 	// "[Invite] You invited ccadoret to channel #hahahhahahahhsauydgasygduygasydga."
-	// "[443] tgriblin ccadoret #poiuytreza is already on channel"
 	// MODE : fournir les flags avec +/- en un seul arg (-ok ou +ikt par exemple)
 	// ARGS DE MODE : /mode <channel> <flags> <args des flags>
 }
@@ -319,8 +344,6 @@ void Server::joinChannelClient( std::vector<pollfd>::iterator &it, std::string n
 		msg = ":" + getChannel(name)->getTopicNick() + " TOPIC " + name + " :" + getChannel(name)->getTopic() + "\r\n";
 		send(it->fd, msg.c_str(), msg.size(), 0);
 	}
-	//msg = ":" + _name + " MODE " + name + " +nt\r\n";
-	//send(it->fd, msg.c_str(), msg.size(), 0);
 	updateUserList(name);
 	
 }
@@ -343,8 +366,8 @@ void Server::updateUserList( std::string channel ) {
 		for (it = getChannel(channel)->getUsers().begin(); it != getChannel(channel)->getUsers().end(); it++) {
 			msg = ":" + _name + " 353 " + it->first + " = " + channel + " :" + getChannel(channel)->getUserList() + "\r\n";
 			sendAll(msg);
-			msg = ":" + _name + " 353 " + it->first + " " + channel + " :End of NAMES list.\r\n";
-			sendAll(msg);
+			//msg = ":" + _name + " 353 " + it->first + " " + channel + " :End of NAMES list.\r\n";
+			//sendAll(msg);
 		}
 	}
 }
