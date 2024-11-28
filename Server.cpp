@@ -280,6 +280,8 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 	// RAW -> "[Invite] invitor invited you to channel #channel."
 	// "[Invite] You invited ccadoret to channel #hahahhahahahhsauydgasygduygasydga."
 	// "[443] tgriblin ccadoret #poiuytreza is already on channel"
+	// MODE : fournir les flags avec +/- en un seul arg (-ok ou +ikt par exemple)
+	// ARGS DE MODE : /mode <channel> <flags> <args des flags>
 }
 
 std::vector<pollfd>::iterator Server::deleteUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it ) {
