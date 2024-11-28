@@ -14,3 +14,6 @@
 #include "Server.hpp"
 #include "User.hpp"
 #include "Channel.hpp"
+
+std::string toLowerStr( std::string s );
+std::vector<std::string> splitStr( std::string s, char c );

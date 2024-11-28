@@ -234,7 +234,7 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 
 		if (getChannel(channel_name)->isUserOp(curr_user)) {
 			msg = ":" + curr_user + "!~" + curr_user + "@localhost " + msg;
-			getChannel(channel_name)->removeUser(target);
+			curr.quitChannel(_channels, channel_name);
 			sendAll(msg);
 		}
 		else {
@@ -274,6 +274,9 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 		}	
 	}
 	else if (msg.substr(0, 8) == "INVITE #") {}
+	else if (toLowerStr(msg.substr(0, 6)) == "mode #") {
+		std::vector<std::string> args = splitStr(msg, ' ');
+	}
 	else if (msg == "exit\n" || msg == "shutdown\n")
 		stop();
 	// "INVITE pseudo #channel" // Channel peut etre different du channel de l'user (arg optionnel)
