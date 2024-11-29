@@ -237,7 +237,7 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 			joinChannelClient(it, channel_name);
 		}
 		msg = ":" + curr_user + " " + msg;
-		sendAll(msg, it->fd);	
+		sendAll(msg, it->fd);
 
 	}
 	else if (msg.substr(0, 6) == "KICK #") {
@@ -329,13 +329,57 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 			}
 		}
 	}
-	else if (toLowerStr(msg.substr(0, 6)) == "mode #") {
+	else if (toLowerStr(msg.substr(0, 5)) == "mode ") {
+		bool positive = true;
 		args = splitStr(msg, ' ');
+
+		if (args.size() == 1) {
+			msg = "Error MODE: This command requires more parameters.\r\n";
+			send(it->fd, msg.c_str(), msg.size(), 0);
+			return ;
+		}
+
+		channel_name = args[1];
+		if (channel_name[channel_name.size() - 1] == '\n')
+			channel_name = channel_name.substr(0, channel_name.size() - 1);
+
+		if (!getChannel(channel_name)) {
+			msg = "Error " + channel_name + ": No such channel.\r\n";
+			send(it->fd, msg.c_str(), msg.size(), 0);
+		}
+		else if (args.size() < 3) {
+			// afficher modes
+		}
+		else {
+			std::string flags = args[2];
+			if (flags[flags.size() - 1] == '\n')
+			flags = flags.substr(0, flags.size() - 1);
+
+			size_t i = 0;
+			while (flags[i] == '+' || flags[i] == '-') {
+				if (flags[i] == '+')
+					positive = true;
+				else
+					positive = false;
+				i++;
+			}
+			while (i < flags.size()) {
+				if (flags[i] != 'i' && flags[i] != 't' && flags[i] != 'k' && flags[i] != 'o' && flags[i] != 'l') {
+					msg = "472 tgriblin ";
+					msg += flags[i];
+					msg += " is an unknown mode char to me\r\n";
+					send(it->fd, msg.c_str(), msg.size(), 0);
+					return ;
+				}
+				//if (flags[i] == 'i')
+				i++;
+			}
+		}
 	}
 	else if (msg == "exit\n" || msg == "shutdown\n")
 		stop();
-	// "INVITE pseudo #channel" // Channel peut etre different du channel de l'user (arg optionnel)
-	// "[Invite] You invited ccadoret to channel #hahahhahahahhsauydgasygduygasydga."
+	// 
+	// 
 	// MODE : fournir les flags avec +/- en un seul arg (-ok ou +ikt par exemple)
 	// ARGS DE MODE : /mode <channel> <flags> <args des flags>
 }
