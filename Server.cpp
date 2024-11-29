@@ -240,7 +240,7 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 			if (curr.joinChannel(_channels, channel_name))
 				joinChannelClient(it, channel_name);
 			else {
-				msg = "473 " + curr_user + " " + channel_name + " Cannot join channel (+i) - you must be invited\r\n";
+				msg = "404 " + curr_user + " " + channel_name + " Cannot send to nick/channel\r\n";
 				send(it->fd, msg.c_str(), msg.size(), 0);
 			}
 		}
@@ -397,7 +397,6 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 	}
 	else if (msg == "exit\n" || msg == "shutdown\n")
 		stop();
-	// 404 tgriblin #channel Cannot send to nick/channel
 	// flag l = INT LIMIT
 	// MODE : fournir les flags avec +/- en un seul arg (-ok ou +ikt par exemple)
 	// ARGS DE MODE : /mode <channel> <flags> <args des flags>
