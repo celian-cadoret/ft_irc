@@ -8,6 +8,10 @@ class Channel {
 		std::map<std::string, bool> _user;
 		std::string _topic;
 		std::string _topic_nick;
+		bool _topic_restrict;
+		bool _invite_only;
+		std::string _pass;
+		int _limit;
 
 	public:
 		Channel();
@@ -26,6 +30,8 @@ class Channel {
 		void setTopic( std::string topic, std::string nick );
 		std::string getTopic();
 		std::string getTopicNick();
+		bool isTopicRestricted();
+		void setTopicRestricted( bool state );
 
 		bool isUserInChannel( std::string nickname );
 		bool isUserOp( std::string nickname );

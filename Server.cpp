@@ -293,7 +293,7 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 			send(it->fd, msg.c_str(), msg.size(), 0);
 		}
 		else {
-			if (getChannel(channel_name)->isUserOp(curr_user)) {
+			if (getChannel(channel_name)->isUserOp(curr_user) || !getChannel(channel_name)->isTopicRestricted()) {
 				getChannel(channel_name)->setTopic(target, curr_user + "!~" + curr_user + "@localhost");
 				msg = ":" + curr_user + "!~" + curr_user + "@localhost " + msg;
 				sendAll(msg);
@@ -371,15 +371,20 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 					send(it->fd, msg.c_str(), msg.size(), 0);
 					return ;
 				}
-				//if (flags[i] == 'i')
+				if (flags[i] == 't') {
+					if (getChannel(channel_name)->isTopicRestricted() == positive)
+						return ;
+					getChannel(channel_name)->setTopicRestricted(positive);
+				}
 				i++;
 			}
+			msg = ":" + curr_user + "!~" + curr_user + "@localhost " + msg;
+			send(it->fd, msg.c_str(), msg.size(), 0);
 		}
 	}
 	else if (msg == "exit\n" || msg == "shutdown\n")
 		stop();
-	// 
-	// 
+	// flag l = INT LIMIT
 	// MODE : fournir les flags avec +/- en un seul arg (-ok ou +ikt par exemple)
 	// ARGS DE MODE : /mode <channel> <flags> <args des flags>
 }

@@ -2,10 +2,21 @@
 
 Channel::Channel() {}
 
-Channel::Channel( Channel const &src ) : _name(src._name), _user(src._user), _topic(src._topic), _topic_nick(src._topic_nick) {}
+Channel::Channel( Channel const &src ) {
+	_name = src._name;
+	_user = src._user;
+	_topic = src._topic;
+	_topic_nick = src._topic_nick;
+	_topic_restrict = src._topic_restrict;
+	_invite_only = src._invite_only;
+	_pass = src._pass;
+	_limit = src._limit;
+}
 
 Channel::Channel( std::string name, std::string owner ) : _name(name) {
 	_user[owner] = true;
+	_topic_restrict = true;
+	_limit = 0;
 }
 
 Channel::~Channel() {}
@@ -76,6 +87,14 @@ std::string Channel::getTopicNick() {
 	return _topic_nick;
 }
 
+bool Channel::isTopicRestricted() {
+	return _topic_restrict;
+}
+
+void Channel::setTopicRestricted( bool state ) {
+	_topic_restrict = state;
+}
+
 
 bool Channel::isUserInChannel( std::string nickname ) {
 	if (_user.find(nickname) == _user.end())
@@ -99,5 +118,9 @@ Channel &Channel::operator=( Channel const &src ) {
 	_user = src._user;
 	_topic = src._topic;
 	_topic_nick = src._topic_nick;
+	_topic_restrict = src._topic_restrict;
+	_invite_only = src._invite_only;
+	_pass = src._pass;
+	_limit = src._limit;
 	return *this;
 }
