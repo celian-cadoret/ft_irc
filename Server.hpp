@@ -43,7 +43,6 @@ class Server {
 		void joinChannelClient( std::vector<pollfd>::iterator &it, std::string name );
 		void treatRequests( std::string msg, User &curr );
 		void parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd> &pollfds, std::string msg );
-		void updateUserList( std::string channel = "" );
 
 		void sendAll( std::string buff, int ignore = 0 );
 		void sendAllChannel( std::string channel, std::string buff, int ignore = 0 );

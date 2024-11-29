@@ -140,7 +140,6 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 		User &curr = _user[getUserFromSocket(it->fd)];
 		std::cout << "[" << it->fd << "<" << curr.getNickname() << ">] Client disconnected" << std::endl;
 		it = deleteUser(pollfds, it);
-		updateUserList(_user[getUserFromSocket(it->fd)].getNickname());
 	}
 	else {
 		std::string msg = buff;
@@ -215,7 +214,8 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 	}
 	else if (msg.substr(0, 6) == "QUIT :") { // Leaving server
 		it = deleteUser(pollfds, it);
-		updateUserList();
+		msg = ":" + curr_user + "!~" + curr_user + "@localhost " + msg;
+		sendAll(msg);
 	}
 	else if (msg.substr(0, 6) == "PART #") { // Leaving a channel
 		args = splitStr(msg, ' ');
@@ -226,7 +226,8 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 		if (!getChannel(channel_name))
 			return ;
 		curr.quitChannel(_channels, channel_name);
-		updateUserList();
+		msg = ":" + curr_user + "!~" + curr_user + "@localhost " + msg;
+		sendAll(msg);
 	}
 	else if (msg.substr(0, 9) == "PRIVMSG #") {
 		args = splitStr(msg, ' ');
@@ -384,6 +385,7 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 	}
 	else if (msg == "exit\n" || msg == "shutdown\n")
 		stop();
+	// 473 tgriblin #channel Cannot join channel (+i) - you must be invited
 	// flag l = INT LIMIT
 	// MODE : fournir les flags avec +/- en un seul arg (-ok ou +ikt par exemple)
 	// ARGS DE MODE : /mode <channel> <flags> <args des flags>
@@ -417,36 +419,15 @@ void Server::joinChannelClient( std::vector<pollfd>::iterator &it, std::string n
 
 	msg = ":" + curr.getNickname() + "!~" + curr.getNickname() + "@localhost JOIN " + name + "\r\n";
 	sendAll(msg);
+	msg = ":" + _name + " 353 " + curr.getNickname()+ " = " + name + " :" + getChannel(name)->getUserList() + "\r\n";
+	sendAll(msg);
+	//msg = ":" + _name + " 353 " + it->first + " " + channel + " :End of NAMES list.\r\n";
+	//sendAll(msg);
 	if (getChannel(name)->getTopic() != "") {
 		msg = ":" + getChannel(name)->getTopicNick() + " TOPIC " + name + " :" + getChannel(name)->getTopic() + "\r\n";
 		send(it->fd, msg.c_str(), msg.size(), 0);
 	}
-	updateUserList(name);
 	
-}
-
-void Server::updateUserList( std::string channel ) {
-	if (_channels.empty())
-		return ;
-
-	std::string msg;
-	if (channel == "") {
-		std::vector<Channel>::iterator it;
-		for (it = _channels.begin(); it != _channels.end(); it++) {
-			updateUserList(it->getName());
-		}
-	}
-	else {
-		if (!getChannel(channel))
-			return ;
-		std::map<std::string, bool>::iterator it;
-		for (it = getChannel(channel)->getUsers().begin(); it != getChannel(channel)->getUsers().end(); it++) {
-			msg = ":" + _name + " 353 " + it->first + " = " + channel + " :" + getChannel(channel)->getUserList() + "\r\n";
-			sendAll(msg);
-			//msg = ":" + _name + " 353 " + it->first + " " + channel + " :End of NAMES list.\r\n";
-			//sendAll(msg);
-		}
-	}
 }
 
 
@@ -480,5 +461,5 @@ const char *Server::ReqNickSpace::what() const throw() {
 }
 
 const char *Server::ReqNickExists::what() const throw() {
-	return "Nickname already used.";
+	return "Nickname already in use, try a different one.";
 }
