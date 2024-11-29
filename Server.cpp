@@ -201,9 +201,11 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 	User &curr = _user[getUserFromSocket(it->fd)];
 	std::string curr_user = curr.getNickname();
 	std::string channel_name, target;
+	std::vector<std::string> args;
 
 	if (msg.substr(0, 5) == "JOIN ") {
-		channel_name = msg.substr(5);
+		args = splitStr(msg, ' ');
+		channel_name = args[1];
 
 		if (channel_name[channel_name.size() - 1] == '\n')
 			channel_name = channel_name.substr(0, channel_name.size() - 1);
@@ -216,8 +218,9 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 		updateUserList();
 	}
 	else if (msg.substr(0, 6) == "PART #") { // Leaving a channel
-		channel_name = msg.substr(msg.find("#"), msg.find(":") - msg.find("#") - 1);
-		std::cout << "[" << channel_name << "]" << std::endl;
+		args = splitStr(msg, ' ');
+		channel_name = args[1];
+
 		if (channel_name[channel_name.size() - 1] == '\n')
 			channel_name = channel_name.substr(0, channel_name.size() - 1);
 		if (!getChannel(channel_name))
@@ -226,7 +229,8 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 		updateUserList();
 	}
 	else if (msg.substr(0, 9) == "PRIVMSG #") {
-		channel_name = msg.substr(8, msg.find(':') - 9);
+		args = splitStr(msg, ' ');
+		channel_name = args[1];
 
 		if (!getChannel(channel_name) || !getChannel(channel_name)->isUserInChannel(curr_user)) {
 			curr.joinChannel(_channels, channel_name);
@@ -237,12 +241,18 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 
 	}
 	else if (msg.substr(0, 6) == "KICK #") {
-		channel_name = msg.substr(5, msg.find(' ', 5) - 5);
+		args = splitStr(msg, ' ');
+		channel_name = args[1];
+		target = args[2];
+
 		if (!getChannel(channel_name))
 			return ;
-		target = msg.substr(msg.find(' ', 5) + 1, msg.find(':') - msg.find(' ', 5) - 2);
 
-		if (getChannel(channel_name)->isUserOp(curr_user)) {
+		if (!getChannel(channel_name)->isUserInChannel(target)) {
+			msg = "Error " + target + ": No such nick/channel.\r\n";
+			send(it->fd, msg.c_str(), msg.size(), 0);
+		}
+		else if (getChannel(channel_name)->isUserOp(curr_user)) {
 			msg = ":" + curr_user + "!~" + curr_user + "@localhost " + msg;
 			curr.quitChannel(_channels, channel_name);
 			sendAll(msg);
@@ -254,17 +264,28 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 
 	}
 	else if (msg.substr(0, 7) == "TOPIC #") {
-		
-		if (msg.find(":") == std::string::npos) {
-			channel_name = msg.substr(6);
-			channel_name = channel_name.substr(0, channel_name.size() - 1);
+		args = splitStr(msg, ' ');
+		channel_name = args[1];
+		target = "";
+		if (args.size() > 2) {
+			for (std::vector<std::string>::iterator its = args.begin() + 2; its != args.end(); its++) {
+				target += *its;
+				target += " ";
+			}
 		}
-		else
-			channel_name = msg.substr(6, msg.find(' ', 6) - 6);
+		if (target != "" && (target[target.size() - 1] == ' ' || target[target.size() - 1] == '\n'))
+			target = target.substr(0, target.size() - 1);
+		if (target != "" && (target[target.size() - 1] == ' ' || target[target.size() - 1] == '\n'))
+			target = target.substr(0, target.size() - 1);
+		if (target != "" && target[0] == ':')
+			target = target.substr(1);
+		if (channel_name[channel_name.size() - 1] == '\n')
+			channel_name = channel_name.substr(0, channel_name.size() - 1);
+		
 		if (!getChannel(channel_name))
 			return ;
 
-		if (msg.find(":") == std::string::npos) {
+		if (args.size() < 3) {
 			if (getChannel(channel_name)->getTopic() != "")
 				msg = ":" + getChannel(channel_name)->getTopicNick() + " 332 " + curr_user + " " + channel_name + " :" + getChannel(channel_name)->getTopic() + "\r\n";
 			else
@@ -273,7 +294,7 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 		}
 		else {
 			if (getChannel(channel_name)->isUserOp(curr_user)) {
-				getChannel(channel_name)->setTopic(msg.substr(msg.find(":") + 1), curr_user + "!~" + curr_user + "@localhost");
+				getChannel(channel_name)->setTopic(target, curr_user + "!~" + curr_user + "@localhost");
 				msg = ":" + curr_user + "!~" + curr_user + "@localhost " + msg;
 				sendAll(msg);
 			}
@@ -284,9 +305,9 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 		}	
 	}
 	else if (msg.substr(0, 7) == "INVITE ") {
-		target = msg.substr(msg.find(" ") + 1);
-		target = target.substr(0, target.find("#") - 1);
-		channel_name = msg.substr(msg.find("#"));
+		args = splitStr(msg, ' ');
+		target = args[1];
+		channel_name = args[2];
 		if (channel_name[channel_name.size() - 1] == '\n')
 			channel_name = channel_name.substr(0, channel_name.size() - 1);
 		if (!getSocketFromNickname(target)) {
@@ -309,7 +330,7 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 		}
 	}
 	else if (toLowerStr(msg.substr(0, 6)) == "mode #") {
-		std::vector<std::string> args = splitStr(msg, ' ');
+		args = splitStr(msg, ' ');
 	}
 	else if (msg == "exit\n" || msg == "shutdown\n")
 		stop();
