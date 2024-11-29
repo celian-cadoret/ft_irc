@@ -286,8 +286,15 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 	else if (msg.substr(0, 7) == "INVITE ") {
 		target = msg.substr(msg.find(" ") + 1);
 		target = target.substr(0, target.find("#") - 1);
-		if (!getSocketFromNickname(target) || !getChannel(channel_name)) {
-			msg = target + ": No such nick/channel.\r\n";
+		channel_name = msg.substr(msg.find("#"));
+		if (channel_name[channel_name.size() - 1] == '\n')
+			channel_name = channel_name.substr(0, channel_name.size() - 1);
+		if (!getSocketFromNickname(target)) {
+			msg = "Error " + target + ": No such nick/channel.\r\n";
+			send(it->fd, msg.c_str(), msg.size(), 0);
+		}
+		else if (!getChannel(channel_name)) {
+			msg = "Error " + channel_name + ": No such nick/channel.\r\n";
 			send(it->fd, msg.c_str(), msg.size(), 0);
 		}
 		else {
