@@ -214,8 +214,6 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 			msg = "473 " + curr_user + " " + channel_name + " Cannot join channel (+i) - you must be invited\r\n";
 			send(it->fd, msg.c_str(), msg.size(), 0);
 		}
-
-
 	}
 	else if (msg.substr(0, 6) == "QUIT :") { // Leaving server
 		it = deleteUser(pollfds, it);

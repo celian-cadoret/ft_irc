@@ -45,12 +45,13 @@ void User::setSocket( int socket ) {
 bool User::joinChannel( std::vector<Channel> &channels, std::string name ) {
 	std::vector<Channel>::iterator it;
 	for (it = channels.begin(); it != channels.end(); it++) {
-		if (it->getName() == name && !it->isUserInChannel(this->getNickname())) {
+		if (it->getName() == name && !it->isUserInChannel(_nickname)) {
 			if (!it->isInviteOnly() || (it->isInviteOnly() && it->isInvited(_nickname))) {
 				it->popInvited(_nickname);
 				it->addUser(_nickname);
 				return true;
 			}
+			break ;
 		}
 	}
 	// Channel was not found
