@@ -51,7 +51,8 @@ bool User::joinChannel( std::vector<Channel> &channels, std::string name ) {
 				it->addUser(_nickname);
 				return true;
 			}
-			break ;
+			else if (it->isInviteOnly() && !it->isInvited(_nickname))
+				return false;
 		}
 	}
 	// Channel was not found
@@ -68,8 +69,9 @@ void User::quitChannel( std::vector<Channel> &channels, std::string name ) {
 		if (it->getName() == name) {
 			it->removeUser(_nickname);
 			if (!it->getUserAmt()) {
+				std::vector<Channel>::iterator tmp = it - 1;
 				channels.erase(it);
-				break;
+				it = tmp;
 			}
 		}
 	}

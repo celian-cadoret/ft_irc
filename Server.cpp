@@ -237,11 +237,13 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 		channel_name = args[1];
 
 		if (!getChannel(channel_name) || !getChannel(channel_name)->isUserInChannel(curr_user)) {
-			if (curr.joinChannel(_channels, channel_name))
+			if (curr.joinChannel(_channels, channel_name)) {
 				joinChannelClient(it, channel_name);
+			}
 			else {
 				msg = "404 " + curr_user + " " + channel_name + " Cannot send to nick/channel\r\n";
 				send(it->fd, msg.c_str(), msg.size(), 0);
+				return ;
 			}
 		}
 		msg = ":" + curr_user + " " + msg;
@@ -261,8 +263,9 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 			send(it->fd, msg.c_str(), msg.size(), 0);
 		}
 		else if (getChannel(channel_name)->isUserOp(curr_user)) {
+			User &target_user = _user[getUserFromSocket(getSocketFromNickname(target))];
+			target_user.quitChannel(_channels, channel_name);
 			msg = ":" + curr_user + "!~" + curr_user + "@localhost " + msg;
-			curr.quitChannel(_channels, channel_name);
 			sendAll(msg);
 		}
 		else {
@@ -372,6 +375,8 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 					positive = false;
 				i++;
 			}
+			size_t curr_arg = 3;
+			std::string tmp_arg;
 			while (i < flags.size()) {
 				if (flags[i] != 'i' && flags[i] != 't' && flags[i] != 'k' && flags[i] != 'o' && flags[i] != 'l') {
 					msg = "472 " + curr_user + " ";
@@ -381,18 +386,32 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 					i++;
 					continue;
 				}
-				if (flags[i] == 'i') {
-					if (getChannel(channel_name)->isInviteOnly() != positive)
-						getChannel(channel_name)->setInviteOnly(positive);
-				}
-				if (flags[i] == 't') {
-					if (getChannel(channel_name)->isTopicRestricted() != positive)
-						getChannel(channel_name)->setTopicRestricted(positive);
+				if (flags[i] == 'i')
+					getChannel(channel_name)->setInviteOnly(positive);
+				if (flags[i] == 't')
+					getChannel(channel_name)->setTopicRestricted(positive);
+				if (flags[i] == 'o') {
+					if (args.size() > curr_arg) {
+						tmp_arg = args[curr_arg++];
+						if (tmp_arg[tmp_arg.size() - 1] == '\n')
+							tmp_arg = tmp_arg.substr(0, tmp_arg.size() - 1);
+						if (!getChannel(channel_name)->isUserInChannel(tmp_arg)) {
+							tmp_arg = "441 " + curr_user + " " + tmp_arg + " " + channel_name + " They aren't on that channel\r\n";
+							send(it->fd, tmp_arg.c_str(), tmp_arg.size(), 0);
+						}
+						else {
+							if (positive)
+								getChannel(channel_name)->addOp(tmp_arg);
+							else
+								getChannel(channel_name)->removeOp(tmp_arg);
+						}
+
+					}
 				}
 				i++;
 			}
 			msg = ":" + curr_user + "!~" + curr_user + "@localhost " + msg;
-			send(it->fd, msg.c_str(), msg.size(), 0);
+			sendAll(msg);
 		}
 	}
 	else if (msg == "exit\n" || msg == "shutdown\n")
@@ -427,9 +446,6 @@ void Server::joinChannelClient( std::vector<pollfd>::iterator &it, std::string n
 	
 	std::string msg;
 	User &curr = _user[getUserFromSocket(it->fd)];
-
-	if (!getChannel(name)->isUserInChannel(curr.getNickname()))
-		return ;
 
 	msg = ":" + curr.getNickname() + "!~" + curr.getNickname() + "@localhost JOIN " + name + "\r\n";
 	sendAll(msg);

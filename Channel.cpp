@@ -17,6 +17,7 @@ Channel::Channel( Channel const &src ) {
 Channel::Channel( std::string name, std::string owner ) : _name(name) {
 	_user[owner] = true;
 	_topic_restrict = true;
+	_invite_only = false;
 	_limit = 0;
 }
 
