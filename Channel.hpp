@@ -6,6 +6,7 @@ class Channel {
 	private:
 		std::string _name;
 		std::map<std::string, bool> _user;
+		std::vector<std::string> _invites;
 		std::string _topic;
 		std::string _topic_nick;
 		bool _topic_restrict;
@@ -32,6 +33,11 @@ class Channel {
 		std::string getTopicNick();
 		bool isTopicRestricted();
 		void setTopicRestricted( bool state );
+		bool isInviteOnly();
+		void setInviteOnly( bool state );
+		void addInvited( std::string nickname );
+		void popInvited( std::string nickname );
+		bool isInvited( std::string nickname );
 
 		bool isUserInChannel( std::string nickname );
 		bool isUserOp( std::string nickname );

@@ -5,6 +5,7 @@ Channel::Channel() {}
 Channel::Channel( Channel const &src ) {
 	_name = src._name;
 	_user = src._user;
+	_invites = src._invites;
 	_topic = src._topic;
 	_topic_nick = src._topic_nick;
 	_topic_restrict = src._topic_restrict;
@@ -93,6 +94,33 @@ bool Channel::isTopicRestricted() {
 
 void Channel::setTopicRestricted( bool state ) {
 	_topic_restrict = state;
+}
+
+bool Channel::isInviteOnly() {
+	return _invite_only;
+}
+
+void Channel::setInviteOnly( bool state ) {
+	_invite_only = state;
+}
+
+void Channel::addInvited( std::string nickname ) {
+	_invites.push_back(nickname);
+}
+
+void Channel::popInvited( std::string nickname ) {
+	for (std::vector<std::string>::iterator it = _invites.begin(); it != _invites.end(); it++) {
+		if (*it == nickname) {
+			_invites.erase(it);
+			if (isNickInVector(_invites, nickname))
+				popInvited(nickname);
+			return ;
+		}
+	}
+}
+
+bool Channel::isInvited( std::string nickname ) {
+	return isNickInVector(_invites, nickname);
 }
 
 

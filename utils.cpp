@@ -33,3 +33,11 @@ std::vector<std::string> splitStr( std::string s, char c ) {
 		out.push_back(s.substr(start, end - start + 1));
 	return out;
 }
+
+bool isNickInVector( std::vector<std::string> v, std::string nick ) {
+	for (std::vector<std::string>::iterator it = v.begin(); it != v.end(); it++) {
+		if (*it == nick)
+			return true;
+	}
+	return false;
+}

@@ -208,8 +208,13 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 
 		if (channel_name[channel_name.size() - 1] == '\n')
 			channel_name = channel_name.substr(0, channel_name.size() - 1);
-		curr.joinChannel(_channels, channel_name);
-		joinChannelClient(it, channel_name);
+		if (curr.joinChannel(_channels, channel_name))
+			joinChannelClient(it, channel_name);
+		else {
+			msg = "473 " + curr_user + " " + channel_name + " Cannot join channel (+i) - you must be invited\r\n";
+			send(it->fd, msg.c_str(), msg.size(), 0);
+		}
+
 
 	}
 	else if (msg.substr(0, 6) == "QUIT :") { // Leaving server
@@ -234,8 +239,12 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 		channel_name = args[1];
 
 		if (!getChannel(channel_name) || !getChannel(channel_name)->isUserInChannel(curr_user)) {
-			curr.joinChannel(_channels, channel_name);
-			joinChannelClient(it, channel_name);
+			if (curr.joinChannel(_channels, channel_name))
+				joinChannelClient(it, channel_name);
+			else {
+				msg = "473 " + curr_user + " " + channel_name + " Cannot join channel (+i) - you must be invited\r\n";
+				send(it->fd, msg.c_str(), msg.size(), 0);
+			}
 		}
 		msg = ":" + curr_user + " " + msg;
 		sendAll(msg, it->fd);
@@ -325,6 +334,7 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 				send(it->fd, msg.c_str(), msg.size(), 0);
 			}
 			else {
+				getChannel(channel_name)->addInvited(target);
 				msg = ":" + curr_user + "!~" + curr_user + "@localhost " + msg;
 				send(getSocketFromNickname(target), msg.c_str(), msg.size(), 0);
 			}
@@ -366,16 +376,20 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 			}
 			while (i < flags.size()) {
 				if (flags[i] != 'i' && flags[i] != 't' && flags[i] != 'k' && flags[i] != 'o' && flags[i] != 'l') {
-					msg = "472 tgriblin ";
+					msg = "472 " + curr_user + " ";
 					msg += flags[i];
 					msg += " is an unknown mode char to me\r\n";
 					send(it->fd, msg.c_str(), msg.size(), 0);
-					return ;
+					i++;
+					continue;
+				}
+				if (flags[i] == 'i') {
+					if (getChannel(channel_name)->isInviteOnly() != positive)
+						getChannel(channel_name)->setInviteOnly(positive);
 				}
 				if (flags[i] == 't') {
-					if (getChannel(channel_name)->isTopicRestricted() == positive)
-						return ;
-					getChannel(channel_name)->setTopicRestricted(positive);
+					if (getChannel(channel_name)->isTopicRestricted() != positive)
+						getChannel(channel_name)->setTopicRestricted(positive);
 				}
 				i++;
 			}
@@ -385,7 +399,7 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 	}
 	else if (msg == "exit\n" || msg == "shutdown\n")
 		stop();
-	// 473 tgriblin #channel Cannot join channel (+i) - you must be invited
+	// 404 tgriblin #channel Cannot send to nick/channel
 	// flag l = INT LIMIT
 	// MODE : fournir les flags avec +/- en un seul arg (-ok ou +ikt par exemple)
 	// ARGS DE MODE : /mode <channel> <flags> <args des flags>
@@ -417,12 +431,16 @@ void Server::joinChannelClient( std::vector<pollfd>::iterator &it, std::string n
 	std::string msg;
 	User &curr = _user[getUserFromSocket(it->fd)];
 
+	if (!getChannel(name)->isUserInChannel(curr.getNickname()))
+		return ;
+
 	msg = ":" + curr.getNickname() + "!~" + curr.getNickname() + "@localhost JOIN " + name + "\r\n";
 	sendAll(msg);
 	msg = ":" + _name + " 353 " + curr.getNickname()+ " = " + name + " :" + getChannel(name)->getUserList() + "\r\n";
 	sendAll(msg);
 	//msg = ":" + _name + " 353 " + it->first + " " + channel + " :End of NAMES list.\r\n";
 	//sendAll(msg);
+
 	if (getChannel(name)->getTopic() != "") {
 		msg = ":" + getChannel(name)->getTopicNick() + " TOPIC " + name + " :" + getChannel(name)->getTopic() + "\r\n";
 		send(it->fd, msg.c_str(), msg.size(), 0);

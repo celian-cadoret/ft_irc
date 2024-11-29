@@ -42,22 +42,30 @@ void User::setSocket( int socket ) {
 }
 
 
-void User::joinChannel( std::vector<Channel> &channels, std::string name ) {
+bool User::joinChannel( std::vector<Channel> &channels, std::string name ) {
 	std::vector<Channel>::iterator it;
 	for (it = channels.begin(); it != channels.end(); it++) {
-		if (it->getName() == name && !it->isUserInChannel(this->getNickname()))
-			it->addUser(this->getNickname());
+		if (it->getName() == name && !it->isUserInChannel(this->getNickname())) {
+			if (!it->isInviteOnly() || (it->isInviteOnly() && it->isInvited(_nickname))) {
+				it->popInvited(_nickname);
+				it->addUser(_nickname);
+				return true;
+			}
+		}
 	}
 	// Channel was not found
-	if (it == channels.end())
-		channels.push_back(Channel(name, this->getNickname()));
+	if (it == channels.end()) {
+		channels.push_back(Channel(name, _nickname));
+		return true;
+	}
+	return false;
 }
 
 void User::quitChannel( std::vector<Channel> &channels, std::string name ) {
 	std::vector<Channel>::iterator it;
 	for (it = channels.begin(); it != channels.end(); it++) {
 		if (it->getName() == name) {
-			it->removeUser(this->getNickname());
+			it->removeUser(_nickname);
 			if (!it->getUserAmt()) {
 				channels.erase(it);
 				break;

@@ -27,7 +27,7 @@ class User {
 		void setUsername( std::string username );
 		void setSocket( int socket );
 
-		void joinChannel( std::vector<Channel> &channels, std::string name );
+		bool joinChannel( std::vector<Channel> &channels, std::string name );
 		void quitChannel( std::vector<Channel> &channels, std::string name );
 
 		User &operator=( User const &src );
