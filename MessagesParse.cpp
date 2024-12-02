@@ -61,6 +61,11 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 
 		if (channel_name[channel_name.size() - 1] == '\n')
 			channel_name = channel_name.substr(0, channel_name.size() - 1);
+		if (getChannel(channel_name) && getChannel(channel_name)->getLimit() && getChannel(channel_name)->getUserAmt() >= getChannel(channel_name)->getLimit()) {
+			msg = "471 " + curr_user + " " + channel_name + " Cannot join channel (+l) - channel is full, try again later\r\n";
+			send(it->fd, msg.c_str(), msg.size(), 0);
+			return ;
+		}
 		if (curr.joinChannel(_channels, channel_name))
 			joinChannelClient(it, channel_name);
 		else {
@@ -93,6 +98,11 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 		channel_name = args[1];
 
 		if (!getChannel(channel_name) || !getChannel(channel_name)->isUserInChannel(curr_user)) {
+			if (getChannel(channel_name) && getChannel(channel_name)->getLimit() && getChannel(channel_name)->getUserAmt() >= getChannel(channel_name)->getLimit()) {
+				msg = "471 " + curr_user + " " + channel_name + " Cannot join channel (+l) - channel is full, try again later\r\n";
+				send(it->fd, msg.c_str(), msg.size(), 0);
+				return ;
+			}
 			if (curr.joinChannel(_channels, channel_name)) {
 				joinChannelClient(it, channel_name);
 			}
@@ -246,10 +256,28 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 					i++;
 					continue;
 				}
-				if (flags[i] == 'i')
+				if (flags[i] == 'i') {
+					if (positive && !getChannel(channel_name)->isInviteOnly()) {
+						msg = ":" + curr_user + "!~" + curr_user + "@localhost MODE " + channel_name + " +o " + tmp_arg + "\r\n";
+						sendAll(msg);
+					}
+					if (!positive && getChannel(channel_name)->isInviteOnly()) {
+						msg = ":" + curr_user + "!~" + curr_user + "@localhost MODE " + channel_name + " -o " + tmp_arg + "\r\n";
+						sendAll(msg);
+					}
 					getChannel(channel_name)->setInviteOnly(positive);
-				if (flags[i] == 't')
+				}
+				if (flags[i] == 't') {
+					if (positive && !getChannel(channel_name)->isTopicRestricted()) {
+						msg = ":" + curr_user + "!~" + curr_user + "@localhost MODE " + channel_name + " +t " + tmp_arg + "\r\n";
+						sendAll(msg);
+					}
+					if (!positive && getChannel(channel_name)->isTopicRestricted()) {
+						msg = ":" + curr_user + "!~" + curr_user + "@localhost MODE " + channel_name + " -t " + tmp_arg + "\r\n";
+						sendAll(msg);
+					}
 					getChannel(channel_name)->setTopicRestricted(positive);
+				}
 				if (flags[i] == 'k') {}
 				if (flags[i] == 'o') {
 					if (args.size() > curr_arg) {
@@ -278,6 +306,8 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 						}
 
 					}
+					else
+						curr_arg++;
 				}
 				if (flags[i] == 'l') {
 					if (!positive && getChannel(channel_name)->getLimit()) {
@@ -310,14 +340,10 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 				}
 				i++;
 			}
-			//msg = ":" + curr_user + "!~" + curr_user + "@localhost " + msg;
-			//sendAll(msg); // INSTEAD SEND A SINGLE MESSAGE FOR EACH FLAG IF THEY CHANGE SMTH
 		}
 	}
 	else if (msg == "exit\n" || msg == "shutdown\n")
 		stop();
-	// flag l = INT LIMIT
-	// "[471] tgriblin #tgriblin42 Cannot join channel (+l) - channel is full, try again later"
 	// MODE : fournir les flags avec +/- en un seul arg (-ok ou +ikt par exemple)
 	// ARGS DE MODE : /mode <channel> <flags> <args des flags>
 }
