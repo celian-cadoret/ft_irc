@@ -124,6 +124,14 @@ bool Channel::isInvited( std::string nickname ) {
 	return isNickInVector(_invites, nickname);
 }
 
+int Channel::getLimit() {
+	return _limit;
+}
+
+void Channel::setLimit( int limit ) {
+	_limit = limit;
+}
+
 
 bool Channel::isUserInChannel( std::string nickname ) {
 	if (_user.find(nickname) == _user.end())

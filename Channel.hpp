@@ -38,6 +38,8 @@ class Channel {
 		void addInvited( std::string nickname );
 		void popInvited( std::string nickname );
 		bool isInvited( std::string nickname );
+		int getLimit();
+		void setLimit( int limit );
 
 		bool isUserInChannel( std::string nickname );
 		bool isUserOp( std::string nickname );

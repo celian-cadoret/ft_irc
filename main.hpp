@@ -11,6 +11,7 @@
 #include <map>
 #include <poll.h>
 #include <algorithm>
+#include <limits>
 #include "Server.hpp"
 #include "User.hpp"
 #include "Channel.hpp"

@@ -2,7 +2,7 @@
 
 void Server::treatRequests( std::string msg, User &curr ) {
 	std::string content;
-	if (msg.substr(0, 4) == "CAP ") {} // ignore
+
 	if (msg.substr(0, 6) == "PASS :") {
 		content = msg.substr(msg.find(":") + 1);
 		if (content[content.size() - 1] == '\n')
@@ -10,6 +10,7 @@ void Server::treatRequests( std::string msg, User &curr ) {
 	
 		if (content != _password)
 			throw ReqInvalidPass();
+
 		curr.setReqState('p');
 	}
 	if (msg.substr(0, 5) == "NICK ") {
@@ -23,12 +24,13 @@ void Server::treatRequests( std::string msg, User &curr ) {
 			if (it->getNickname() == content)
 				throw ReqNickExists();
 		}
+
 		curr.setNickname(content);
 		curr.setReqState('n');
 	}
 	if (msg.substr(0, 5) == "USER ") {
 		if (msg.find(":") == std::string::npos)
-			throw std::exception();
+			return ;
 		
 		content = msg.substr(msg.find(":") + 1);
 		if (content[content.size() - 1] == '\n')
@@ -40,9 +42,10 @@ void Server::treatRequests( std::string msg, User &curr ) {
 	if (curr.isConnected()) {
 		if (!curr.isPassSet())
 			throw ReqInvalidPass();
+
 		msg = "Welcome Successfully connected to " + _name + " !\r\n";
 		send(curr.getSocket(), msg.c_str(), msg.size(), 0);
-		std::cout << "[SERVER] User successfully connected: " << curr.getNickname() << ", " << curr.getUsername() << std::endl;
+		std::cout << "[SERVER] User successfully connected: " << curr.getNickname() << ", " << curr.getUsername() << ", " << curr.getSocket() << std::endl;
 	}
 }
 
@@ -247,6 +250,7 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 					getChannel(channel_name)->setInviteOnly(positive);
 				if (flags[i] == 't')
 					getChannel(channel_name)->setTopicRestricted(positive);
+				if (flags[i] == 'k') {}
 				if (flags[i] == 'o') {
 					if (args.size() > curr_arg) {
 						tmp_arg = args[curr_arg++];
@@ -265,15 +269,43 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 
 					}
 				}
+				if (flags[i] == 'l') {
+					if (!positive && getChannel(channel_name)->getLimit()) {
+						getChannel(channel_name)->setLimit(0);
+						msg = ":" + curr_user + "!~" + curr_user + "@localhost MODE " + channel_name + " -l\r\n";
+						sendAll(msg);
+					}
+					if (args.size() <= curr_arg && positive) {
+						msg = "Error MODE: This command requires more parameters.\r\n";
+						send(it->fd, msg.c_str(), msg.size(), 0);
+					}
+					else if (args.size() > curr_arg && positive) {
+						tmp_arg = args[curr_arg++];
+						if (tmp_arg[tmp_arg.size() - 1] == '\n')
+							tmp_arg = tmp_arg.substr(0, tmp_arg.size() - 1);
+						bool tmp = false;
+						for (size_t j = 0; j < tmp_arg.size(); j++) {
+							if (!isdigit(tmp_arg[j]))
+								tmp = true;
+						}
+						int limit = atoi(tmp_arg.c_str());
+						if (limit >= 1 && limit <= std::numeric_limits<int>::max()) {
+							getChannel(channel_name)->setLimit(limit);
+							msg = ":" + curr_user + "!~" + curr_user + "@localhost MODE " + channel_name + " +l " + tmp_arg + "\r\n";
+							sendAll(msg);
+						}
+					}
+				}
 				i++;
 			}
-			msg = ":" + curr_user + "!~" + curr_user + "@localhost " + msg;
-			sendAll(msg); // INSTEAD SEND A SINGLE MESSAGE FOR EACH FLAG IF THEY CHANGE SMTH
+			//msg = ":" + curr_user + "!~" + curr_user + "@localhost " + msg;
+			//sendAll(msg); // INSTEAD SEND A SINGLE MESSAGE FOR EACH FLAG IF THEY CHANGE SMTH
 		}
 	}
 	else if (msg == "exit\n" || msg == "shutdown\n")
 		stop();
 	// flag l = INT LIMIT
+	// "[471] tgriblin #tgriblin42 Cannot join channel (+l) - channel is full, try again later"
 	// MODE : fournir les flags avec +/- en un seul arg (-ok ou +ikt par exemple)
 	// ARGS DE MODE : /mode <channel> <flags> <args des flags>
 }
