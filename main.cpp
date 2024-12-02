@@ -6,7 +6,21 @@ int main( int ac, char **av ) {
 		return 1;
 	}
 
-	Server server("PortHub", atoi(av[1]), av[2]);
+	for (int i = 0; av[1][i]; i++){
+		if (!isdigit(av[1][i])) {
+			std::cerr << "Error: invalid port." << std::endl;
+			return 1;
+		}
+	}
+	int port = atoi(av[1]);
+	if (port < 1)
+		std::cerr << "Error: port number too small: " << port << std::endl;
+	if (port > 65535)
+		std::cerr << "Error: port number too large: " << port << std::endl;
+	if (port < 1 || port > 65535)
+		return 1;
+
+	Server server("PortHub", port, av[2]);
 	if (server.start())
 		return 1;
 
