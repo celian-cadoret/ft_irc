@@ -1,10 +1,17 @@
 #include "User.hpp"
 
-User::User() : _user_fd(0), _connect_state(0) {}
+User::User() : _user_fd(0) {}
 
-User::User( User const &src ) : _user_fd(src._user_fd), _username(src._username), _nickname(src._nickname), _connect_state(src._connect_state) {}
+User::User( User const &src ) {
+	_username = src._username;
+	_nickname = src._nickname;
+	_user_fd = src._user_fd;
+	_pass_req = src._pass_req;
+	_nick_req = src._nick_req;
+	_user_req = src._user_req;
+}
 
-User::User( int user_fd ) : _user_fd(user_fd), _connect_state(0) {}
+User::User( int user_fd ) : _user_fd(user_fd) {}
 
 User::~User() {}
 
@@ -21,14 +28,6 @@ std::string	User::getNickname() {
 	return (_nickname);
 }
 
-int User::getConnectState() {
-	return _connect_state;
-}
-
-void User::incrementConnectState( int n ) {
-	_connect_state += n;
-}
-
 void User::setNickname( std::string nickname ) {
 	_nickname = nickname;
 }
@@ -39,6 +38,23 @@ void User::setUsername( std::string username ) {
 
 void User::setSocket( int socket ) {
 	_user_fd = socket;
+}
+
+bool User::isConnected() {
+	return _nick_req && _user_req;
+}
+
+bool User::isPassSet() {
+	return _pass_req;
+}
+
+void User::setReqState( char req ) {
+	if (req == 'p')
+		_pass_req = true;
+	if (req == 'n')
+		_nick_req = true;
+	if (req == 'u')
+		_user_req = true;
 }
 
 
@@ -82,6 +98,8 @@ User &User::operator=( User const &src ) {
 	_username = src._username;
 	_nickname = src._nickname;
 	_user_fd = src._user_fd;
-	_connect_state = src._connect_state;
+	_pass_req = src._pass_req;
+	_nick_req = src._nick_req;
+	_user_req = src._user_req;
 	return *this;
 }

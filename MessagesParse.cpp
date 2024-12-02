@@ -10,7 +10,7 @@ void Server::treatRequests( std::string msg, User &curr ) {
 	
 		if (content != _password)
 			throw ReqInvalidPass();
-		curr.incrementConnectState();
+		curr.setReqState('p');
 	}
 	if (msg.substr(0, 5) == "NICK ") {
 		content = msg.substr(msg.find(" ") + 1);
@@ -24,6 +24,7 @@ void Server::treatRequests( std::string msg, User &curr ) {
 				throw ReqNickExists();
 		}
 		curr.setNickname(content);
+		curr.setReqState('n');
 	}
 	if (msg.substr(0, 5) == "USER ") {
 		if (msg.find(":") == std::string::npos)
@@ -33,10 +34,12 @@ void Server::treatRequests( std::string msg, User &curr ) {
 		if (content[content.size() - 1] == '\n')
 			content = content.substr(0, content.size() - 1);
 
-		if (!curr.getConnectState())
-			throw ReqInvalidPass();
 		curr.setUsername(content);
-		curr.incrementConnectState();
+		curr.setReqState('u');
+	}
+	if (curr.isConnected()) {
+		if (!curr.isPassSet())
+			throw ReqInvalidPass();
 		msg = "Welcome Successfully connected to " + _name + " !\r\n";
 		send(curr.getSocket(), msg.c_str(), msg.size(), 0);
 		std::cout << "[SERVER] User successfully connected: " << curr.getNickname() << ", " << curr.getUsername() << std::endl;

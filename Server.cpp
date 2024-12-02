@@ -146,7 +146,7 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 		User &curr = _user[getUserFromSocket(it->fd)];
 
 		std::cout << "[" << it->fd << "<" << curr.getNickname() << ">] " << msg;
-		if (curr.getConnectState() > 1)
+		if (curr.isConnected())
 			parseMessage(it, pollfds, msg);
 		else
 			treatRequests(msg, curr);

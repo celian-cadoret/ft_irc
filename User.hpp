@@ -9,7 +9,9 @@ class User {
 		int _user_fd;
 		std::string _username;
 		std::string _nickname;
-		int _connect_state;
+		bool _pass_req;
+		bool _nick_req;
+		bool _user_req;
 	
 	public:
 		User();
@@ -20,12 +22,12 @@ class User {
 		int	getSocket();
 		std::string	getUsername();
 		std::string	getNickname();
-		std::string getPassword();
-		int getConnectState();
-		void incrementConnectState( int n = 1 );
 		void setNickname( std::string nickname );
 		void setUsername( std::string username );
 		void setSocket( int socket );
+		bool isConnected();
+		bool isPassSet();
+		void setReqState( char req );
 
 		bool joinChannel( std::vector<Channel> &channels, std::string name );
 		void quitChannel( std::vector<Channel> &channels, std::string name );
