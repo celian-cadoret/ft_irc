@@ -257,14 +257,24 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 						if (tmp_arg[tmp_arg.size() - 1] == '\n')
 							tmp_arg = tmp_arg.substr(0, tmp_arg.size() - 1);
 						if (!getChannel(channel_name)->isUserInChannel(tmp_arg)) {
-							tmp_arg = "441 " + curr_user + " " + tmp_arg + " " + channel_name + " They aren't on that channel\r\n";
-							send(it->fd, tmp_arg.c_str(), tmp_arg.size(), 0);
+							msg = "441 " + curr_user + " " + tmp_arg + " " + channel_name + " They aren't on that channel\r\n";
+							send(it->fd, msg.c_str(), msg.size(), 0);
 						}
 						else {
-							if (positive)
+							if (positive) {
+								if (!getChannel(channel_name)->isUserOp(tmp_arg)) {
+									msg = ":" + curr_user + "!~" + curr_user + "@localhost MODE " + channel_name + " +o " + tmp_arg + "\r\n";
+									sendAll(msg);
+								}
 								getChannel(channel_name)->addOp(tmp_arg);
-							else
+							}
+							else {
+								if (getChannel(channel_name)->isUserOp(tmp_arg)) {
+									msg = ":" + curr_user + "!~" + curr_user + "@localhost MODE " + channel_name + " -o " + tmp_arg + "\r\n";
+									sendAll(msg);
+								}
 								getChannel(channel_name)->removeOp(tmp_arg);
+							}
 						}
 
 					}
@@ -295,6 +305,8 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 							sendAll(msg);
 						}
 					}
+					else
+						curr_arg++;
 				}
 				i++;
 			}
