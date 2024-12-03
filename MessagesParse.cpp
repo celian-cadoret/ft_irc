@@ -61,7 +61,17 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 
 		if (channel_name[channel_name.size() - 1] == '\n')
 			channel_name = channel_name.substr(0, channel_name.size() - 1);
-		if (getChannel(channel_name) && getChannel(channel_name)->getLimit() && getChannel(channel_name)->getUserAmt() >= getChannel(channel_name)->getLimit()) {
+		if (args.size() > 2) {
+			target = args[2];
+			if (target[target.size() - 1] == '\n')
+				target = target.substr(0, target.size() - 1);
+		}
+		if (getChannel(channel_name) && getChannel(channel_name)->getPass() != "" && (args.size() < 3 || getChannel(channel_name)->getPass() != target)) {
+			msg = "Error Cannot join " + channel_name  + ": The channel is password-protected and either a wrong or no password was given\r\n";
+			send(it->fd, msg.c_str(), msg.size(), 0);
+			return ;
+		}
+		else if (getChannel(channel_name) && getChannel(channel_name)->getLimit() && getChannel(channel_name)->getUserAmt() >= getChannel(channel_name)->getLimit()) {
 			msg = "471 " + curr_user + " " + channel_name + " Cannot join channel (+l) - channel is full, try again later\r\n";
 			send(it->fd, msg.c_str(), msg.size(), 0);
 			return ;
@@ -98,6 +108,11 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 		channel_name = args[1];
 
 		if (!getChannel(channel_name) || !getChannel(channel_name)->isUserInChannel(curr_user)) {
+			if (getChannel(channel_name) && getChannel(channel_name)->getPass() != "") {
+				msg = "Error Cannot join " + channel_name  + ": The channel is password-protected and either a wrong or no password was given\r\n";
+				send(it->fd, msg.c_str(), msg.size(), 0);
+				return ;
+			}
 			if (getChannel(channel_name) && getChannel(channel_name)->getLimit() && getChannel(channel_name)->getUserAmt() >= getChannel(channel_name)->getLimit()) {
 				msg = "471 " + curr_user + " " + channel_name + " Cannot join channel (+l) - channel is full, try again later\r\n";
 				send(it->fd, msg.c_str(), msg.size(), 0);
@@ -278,7 +293,23 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 					}
 					getChannel(channel_name)->setTopicRestricted(positive);
 				}
-				if (flags[i] == 'k') {}
+				if (flags[i] == 'k') {
+					if (args.size() > curr_arg) {
+						tmp_arg = args[curr_arg++];
+						if (tmp_arg[tmp_arg.size() - 1] == '\n')
+							tmp_arg = tmp_arg.substr(0, tmp_arg.size() - 1);
+						if (getChannel(channel_name)->getPass() == "" && positive) {
+							msg = ":" + curr_user + "!~" + curr_user + "@localhost MODE " + channel_name + " +k " + tmp_arg + "\r\n";
+							sendAll(msg);
+							getChannel(channel_name)->setPass(tmp_arg);
+						}
+						if (getChannel(channel_name)->getPass() != "" && !positive) {
+							msg = ":" + curr_user + "!~" + curr_user + "@localhost MODE " + channel_name + " -k " + tmp_arg + "\r\n";
+							sendAll(msg);
+							getChannel(channel_name)->setPass(tmp_arg);
+						}
+					}
+				}
 				if (flags[i] == 'o') {
 					if (args.size() > curr_arg) {
 						tmp_arg = args[curr_arg++];
@@ -306,8 +337,6 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 						}
 
 					}
-					else
-						curr_arg++;
 				}
 				if (flags[i] == 'l') {
 					if (!positive && getChannel(channel_name)->getLimit()) {

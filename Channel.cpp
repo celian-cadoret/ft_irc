@@ -132,6 +132,14 @@ void Channel::setLimit( int limit ) {
 	_limit = limit;
 }
 
+std::string Channel::getPass() {
+	return _pass;
+}
+
+void Channel::setPass( std::string pass ) {
+	_pass = pass;
+}
+
 
 bool Channel::isUserInChannel( std::string nickname ) {
 	if (_user.find(nickname) == _user.end())
