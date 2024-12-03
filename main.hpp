@@ -1,17 +1,18 @@
 #pragma once
 
+// C++ Headers
 #include <iostream>
-#include <cstring>       // Pour memset()
-#include <sys/types.h>   // Pour les types de sockets
-#include <sys/socket.h>  // Pour les sockets
-#include <netinet/in.h>  // Pour les structures d'adresse (sockaddr_in)
-#include <unistd.h>      // Pour close()
+#include <cstring>
 #include <cstdlib>
 #include <vector>
 #include <map>
-#include <poll.h>
 #include <algorithm>
 #include <limits>
+// C Headers
+#include <unistd.h>     // close()
+#include <poll.h>       // poll()
+#include <netinet/in.h> // sockaddr_in
+// Local headers
 #include "Server.hpp"
 #include "User.hpp"
 #include "Channel.hpp"

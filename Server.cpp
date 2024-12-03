@@ -127,13 +127,15 @@ void Server::connectUser( std::vector<pollfd> &new_pollfds ) {
 }
 
 void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it ) {
-	size_t buffer_size = 2048;
+	size_t buffer_size = 4096;
 	char buff[buffer_size];
 
-	int rc = recv(it->fd, buff, buffer_size - 1, 0); // TODO
+	int rc = recv(it->fd, buff, buffer_size - 1, 0);
 	buff[rc] = '\0';
 	if (rc < 0) {
-		std::cerr << "Read error" << std::endl;
+		User &curr = _user[getUserFromSocket(it->fd)];
+		std::cerr << "[" << it->fd << "<" << curr.getNickname() << ">] recv Error, Client disconnected" << std::endl;
+		it = deleteUser(pollfds, it);
 		return ;
 	}
 	if (rc == 0) {
