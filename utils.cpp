@@ -33,3 +33,19 @@ bool isNickInVector( std::vector<std::string> v, std::string nick ) {
 	}
 	return false;
 }
+
+std::string getLastWord( std::string msg ) {
+    if (msg.empty()) {
+        return "";
+	}
+
+	for (size_t i = msg.size() - 1; i > 0; i--) {
+	    if (msg[i] == ' ' && i == msg.size() - 1) {
+	        while (msg[i] == ' ')
+	            i--;
+		}
+		if (msg[i] == ' ' && i != msg.size() - 1)
+			return msg.substr(i + 1);
+	}
+	return msg;
+}

@@ -20,3 +20,4 @@
 std::string toLowerStr( std::string s );
 std::vector<std::string> splitStr( std::string s, char c );
 bool isNickInVector( std::vector<std::string> v, std::string nick );
+std::string getLastWord( std::string msg );

@@ -45,7 +45,9 @@ class Server {
 		void parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd> &pollfds, std::string msg );
 
 		void sendAll( std::string buff, int ignore = 0 );
-		void sendAllChannel( std::string channel, std::string buff, int ignore = 0 );
+
+		void botardAnswer( std::string channel, std::string msg );
+		void botarate( std::string channel );
 
 		class ReqInvalidPass : public std::exception {
 			virtual const char *what() const throw();

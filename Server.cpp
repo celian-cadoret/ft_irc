@@ -201,19 +201,6 @@ void Server::sendAll( std::string buff, int ignore ) {
 	}
 }
 
-void Server::sendAllChannel( std::string channel, std::string buff, int ignore ) {
-	if (!getChannel(channel))
-		return ;
-	
-	std::map<std::string, bool>::iterator it;
-	for (it = getChannel(channel)->getUsers().begin(); it != getChannel(channel)->getUsers().end(); it++) {
-		int fd = getSocketFromNickname(it->first);
-		if (!fd || fd == ignore)
-			continue;
-		send(fd, buff.c_str(), buff.size(), 0);
-	}
-}
-
 
 const char *Server::ReqInvalidPass::what() const throw() {
 	return "Invalid password.";
