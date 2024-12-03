@@ -393,8 +393,8 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 			}
 		}
 	}
-	else if (msg == "exit\n" || msg == "shutdown\n")
-		stop();
-	// MODE : fournir les flags avec +/- en un seul arg (-ok ou +ikt par exemple)
-	// ARGS DE MODE : /mode <channel> <flags> <args des flags>
+	else if (msg.substr(0, 8) == "shutdown") {
+		if (curr_user == _user[0].getNickname())
+			stop();
+	}
 }
