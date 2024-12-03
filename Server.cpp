@@ -185,8 +185,6 @@ void Server::joinChannelClient( std::vector<pollfd>::iterator &it, std::string n
 	sendAll(msg);
 	msg = ":" + _name + " 353 " + curr.getNickname()+ " = " + name + " :" + getChannel(name)->getUserList() + "\r\n";
 	sendAll(msg);
-	//msg = ":" + _name + " 353 " + it->first + " " + channel + " :End of NAMES list.\r\n";
-	//sendAll(msg);
 
 	if (getChannel(name)->getTopic() != "") {
 		msg = ":" + getChannel(name)->getTopicNick() + " TOPIC " + name + " :" + getChannel(name)->getTopic() + "\r\n";

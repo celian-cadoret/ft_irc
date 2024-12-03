@@ -245,9 +245,27 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 			send(it->fd, msg.c_str(), msg.size(), 0);
 		}
 		else if (args.size() < 3) {
-			// afficher modes
+			std::string modes = "+n";
+			std::string modes_args = "";
+			if (getChannel(channel_name)->isInviteOnly())
+				modes += "i";
+			if (getChannel(channel_name)->isTopicRestricted())
+				modes += "t";
+			if (getChannel(channel_name)->getPass() != "")
+				modes += "k";
+			if (getChannel(channel_name)->getLimit()) {
+				modes += "l ";
+				modes += getChannel(channel_name)->getLimit();
+			}
+			msg = ":" + _name + " 324 " + curr.getNickname()+ " " + channel_name + " " + modes + "\r\n";
+			send(it->fd, msg.c_str(), msg.size(), 0);
 		}
 		else {
+			if (!getChannel(channel_name)->isUserOp(curr_user)) {
+				msg = "Error You need to be a channel operator in " + channel_name + " to do that.\r\n";
+				send(it->fd, msg.c_str(), msg.size(), 0);
+				return ;
+			}
 			std::string flags = args[2];
 			if (flags[flags.size() - 1] == '\n')
 			flags = flags.substr(0, flags.size() - 1);
@@ -263,13 +281,17 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 			size_t curr_arg = 3;
 			std::string tmp_arg;
 			while (i < flags.size()) {
-				if (flags[i] != 'i' && flags[i] != 't' && flags[i] != 'k' && flags[i] != 'o' && flags[i] != 'l') {
+				if (flags[i] != 'i' && flags[i] != 't' && flags[i] != 'k' && flags[i] != 'o' && flags[i] != 'l' && flags[i] != 'b') {
 					msg = "472 " + curr_user + " ";
 					msg += flags[i];
 					msg += " is an unknown mode char to me\r\n";
 					send(it->fd, msg.c_str(), msg.size(), 0);
 					i++;
 					continue;
+				}
+				if (flags[i] == 'b') {
+					msg = ":" + _name + " 368 " + curr.getNickname()+ " " + channel_name + " :End of ban list\r\n";
+					send(it->fd, msg.c_str(), msg.size(), 0);
 				}
 				if (flags[i] == 'i') {
 					if (positive && !getChannel(channel_name)->isInviteOnly()) {

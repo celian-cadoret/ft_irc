@@ -1,6 +1,6 @@
 #include "User.hpp"
 
-User::User() : _user_fd(0) {}
+User::User() : _user_fd(0), _pass_req(false), _nick_req(false), _user_req(false) {}
 
 User::User( User const &src ) {
 	_username = src._username;
@@ -11,7 +11,7 @@ User::User( User const &src ) {
 	_user_req = src._user_req;
 }
 
-User::User( int user_fd ) : _user_fd(user_fd) {}
+User::User( int user_fd ) : _user_fd(user_fd), _pass_req(false), _nick_req(false), _user_req(false) {}
 
 User::~User() {}
 
