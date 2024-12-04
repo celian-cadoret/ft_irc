@@ -103,7 +103,7 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 		sendAll(msg);
 	}
 
-	else if (msg.substr(0, 9) == "PRIVMSG #") {
+	else if (msg.substr(0, 8) == "PRIVMSG ") {
 		args = splitStr(msg, ' ');
 		channel_name = args[1];
 

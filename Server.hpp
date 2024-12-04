@@ -15,6 +15,7 @@ class Server {
 		std::vector<User> _user;
 		std::vector<Channel> _channels;
 		bool _running;
+		std::map<int, std::string> _buffer;
 	
 	public:
 		Server();

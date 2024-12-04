@@ -130,29 +130,36 @@ void Server::manageUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iter
 	size_t buffer_size = 4096;
 	char buff[buffer_size];
 
-	int rc = recv(it->fd, buff, buffer_size - 1, 0);
-	buff[rc] = '\0';
-	if (rc < 0) {
-		User &curr = _user[getUserFromSocket(it->fd)];
-		std::cerr << "[" << it->fd << "<" << curr.getNickname() << ">] recv Error, Client disconnected" << std::endl;
-		it = deleteUser(pollfds, it);
-		return ;
+	while (_buffer[it->fd].find('\n') == _buffer[it->fd].npos) {
+		int rc = recv(it->fd, buff, buffer_size - 1, 0);
+		if (rc < 0) {
+			User &curr = _user[getUserFromSocket(it->fd)];
+			std::cerr << "[" << it->fd << "<" << curr.getNickname() << ">] recv Error, Client disconnected" << std::endl;
+			it = deleteUser(pollfds, it);
+			_buffer[it->fd] = "";
+			return ;
+		}
+		buff[rc] = '\0';
+		_buffer[it->fd] += buff;
+		if (_buffer[it->fd].find('\n') != _buffer[it->fd].npos)
+			break;
+		if (rc == 0) {
+			User &curr = _user[getUserFromSocket(it->fd)];
+			std::cout << "[" << it->fd << "<" << curr.getNickname() << ">] Client disconnected" << std::endl;
+			it = deleteUser(pollfds, it);
+			_buffer[it->fd] = "";
+			return ;
+		}
 	}
-	if (rc == 0) {
-		User &curr = _user[getUserFromSocket(it->fd)];
-		std::cout << "[" << it->fd << "<" << curr.getNickname() << ">] Client disconnected" << std::endl;
-		it = deleteUser(pollfds, it);
-	}
-	else {
-		std::string msg = buff;
-		User &curr = _user[getUserFromSocket(it->fd)];
+	std::string msg = _buffer[it->fd];
+	_buffer[it->fd] = "";
+	User &curr = _user[getUserFromSocket(it->fd)];
 
-		std::cout << "[" << it->fd << "<" << curr.getNickname() << ">] " << msg;
-		if (curr.isConnected())
-			parseMessage(it, pollfds, msg);
-		else
-			treatRequests(msg, curr);
-	}
+	std::cout << "[" << it->fd << "<" << curr.getNickname() << ">] " << msg;
+	if (curr.isConnected())
+		parseMessage(it, pollfds, msg);
+	else
+		treatRequests(msg, curr);
 }
 
 std::vector<pollfd>::iterator Server::deleteUser( std::vector<pollfd> &pollfds, std::vector<pollfd>::iterator &it ) {
