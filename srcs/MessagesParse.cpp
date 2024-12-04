@@ -1,4 +1,4 @@
-#include "main.hpp"
+#include "../includes/main.hpp"
 
 void Server::treatRequests( std::string msg, User &curr ) {
 	std::string content;

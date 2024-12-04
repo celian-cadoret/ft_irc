@@ -1,13 +1,14 @@
 NAME = ircserv
 
-INCLUDE = ./
+SRCS = srcs/
+INCLUDE = includes/
 
 CC = c++
 CFLAGS = -Wall -Wextra -Werror -std=c++98 -g
 
 FILES = main.cpp Server.cpp MessagesParse.cpp User.cpp Channel.cpp utils.cpp \
 		Botard.cpp
-OBJECTS = $(FILES:.cpp=.o)
+OBJECTS = $(addprefix $(SRCS), $(FILES:.cpp=.o))
 
 %.o: %.cpp
 	$(CC) $(CFLAGS) -c $< -o $@ -I $(INCLUDE)

@@ -1,4 +1,4 @@
-#include "User.hpp"
+#include "../includes/User.hpp"
 
 User::User() : _user_fd(0), _pass_req(false), _nick_req(false), _user_req(false) {}
 

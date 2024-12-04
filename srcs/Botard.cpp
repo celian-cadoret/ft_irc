@@ -1,4 +1,4 @@
-#include "main.hpp"
+#include "../includes/main.hpp"
 
 void Server::botardAnswer( std::string channel, std::string msg ) {
 	for (size_t i = 0; i < msg.size(); i++) {

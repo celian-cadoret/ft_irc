@@ -1,4 +1,4 @@
-#include "main.hpp"
+#include "../includes/main.hpp"
 
 std::string toLowerStr( std::string s ) {
 	std::string out;
