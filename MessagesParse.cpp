@@ -397,18 +397,26 @@ void Server::parseMessage( std::vector<pollfd>::iterator &it, std::vector<pollfd
 	else if (msg.substr(0, 9) == "shutdown ") {
 		if (curr_user == _user[0].getNickname())
 			stop();
+		else {
+			msg = "Error You must be the original user to use this command.\n";
+			send(it->fd, msg.c_str(), msg.size(), 0);
+		}
 	}
 	else if (msg.substr(0, 9) == "botarate ") {
 		args = splitStr(msg, ' ');
+		channel_name = args[1];
+		if (channel_name[channel_name.size() - 1] == '\n')
+		channel_name = channel_name.substr(0, channel_name.size() - 1);
+
 		if (args.size() < 2) {
 			msg = "Error MODE: This command requires more parameters.\r\n";
 			send(it->fd, msg.c_str(), msg.size(), 0);
 		}
-		else if (!getChannel(args[1])) {
+		else if (!getChannel(channel_name)) {
 			msg = "Error " + channel_name + ": No such channel.\r\n";
 			send(it->fd, msg.c_str(), msg.size(), 0);
 		}
 		else
-			botarate(args[1]);
+			botarate(channel_name);
 	}
 }

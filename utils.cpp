@@ -39,13 +39,15 @@ std::string getLastWord( std::string msg ) {
         return "";
 	}
 
+	size_t end = msg.size() - 1;
 	for (size_t i = msg.size() - 1; i > 0; i--) {
-	    if (msg[i] == ' ' && i == msg.size() - 1) {
-	        while (msg[i] == ' ')
+	    if (i == msg.size() - 1) {
+	        while (msg[i] == ' ' || msg[i] == '\n')
 	            i--;
+			end = i;
 		}
 		if (msg[i] == ' ' && i != msg.size() - 1)
-			return msg.substr(i + 1);
+			return msg.substr(i + 1, end - i);
 	}
 	return msg;
 }
